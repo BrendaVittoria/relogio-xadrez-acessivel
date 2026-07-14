@@ -310,6 +310,43 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 
 section { margin-top: 1rem; }
 
-@media (max-width: 480px) {
-  .relogio-tempo { font-size: 1.7rem; }
+/* ---------------- Celular: tela de jogo inteira numa página só ----------------
+   Relógios, tabuleiro, caixa de lances e botões precisam caber juntos na
+   altura da tela, sem rolagem. Todas as medidas usam unidades estáticas
+   (svh, vmin): elas não mudam quando a barra de endereço do navegador some
+   na rolagem, então o tabuleiro nunca muda de tamanho no meio do uso —
+   rolar só desliza a página, com tudo estável. */
+@media (max-width: 600px) {
+  /* o título do app sai de cena durante a partida para liberar altura;
+     a tela de jogo tem o próprio título (h2, para leitores de tela) */
+  body:has(#tela-jogo:not([hidden])) header { display: none; }
+  body:has(#tela-jogo:not([hidden])) main { padding-bottom: 0.75rem; }
+
+  #tela-jogo { margin-top: 0.5rem; }
+
+  /* relógios sempre lado a lado, numa linha só, mais baixos */
+  #relogios { gap: 0.5rem; margin: 0.4rem 0 0.6rem; }
+  .relogio { flex-basis: 0; min-width: 0; padding: 0.25rem 0.6rem; }
+  .relogio-tempo { font-size: 1.6rem; }
+
+  /* botões e entrada mais compactos na tela de jogo — exceto as casas do
+     tabuleiro, que são botões cujo padding-bottom de 100% as faz quadradas */
+  #tela-jogo button:not(.tab-casa) { padding: 0.5rem 0.9rem; margin: 0.15rem 0.3rem 0.15rem 0; }
+  #area-entrada label { margin-top: 0.35rem; }
+  #entrada { font-size: 1.2rem; padding: 0.45rem 0.6rem; }
+
+  /* a dica do NVDA é para computador; no celular só ocupa altura */
+  .tab-coordenadas { display: none; }
+
+  #tabuleiro, #tabuleiro-leitura { margin-top: 0.5rem; }
+
+  /* O tabuleiro também é limitado pela ALTURA que sobra na tela: 100svh
+     (altura da tela com a barra de endereço visível — o pior caso) menos
+     o espaço dos relógios, botões e caixa de lances (~24rem, já contando
+     indicador de pausa e "na vez"). O piso de 13rem garante casas tocáveis
+     mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
+     tabuleiro continua inteiro e estável. */
+  .tab-grade {
+    width: max(min(100%, 88vmin, 30rem, calc(100svh - 24rem)), 13rem);
+  }
 }
