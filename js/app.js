@@ -3,7 +3,7 @@
 
 import { Chess } from '../vendor/chess.js';
 import { iniciarAnunciador, anunciar, bipe } from './anunciador.js';
-import { descreverLanceFalado, sufixoXeque } from './fala.js';
+import { preencherListaLances } from './fala.js';
 import { SPECIAL_COMMANDS } from './comandos.js';
 import { Partida } from './jogo.js';
 import { gerarPgn, nomeArquivoPgn, baixarPgn, criarArquivoPgn, podeCompartilharArquivo, compartilharPgn } from './pgn.js';
@@ -279,19 +279,11 @@ function preencherTelaResultado(fim) {
   $('resultado-duracao').textContent =
     `Duração da partida: ${duracaoFalada((fim.encerradaEm || Date.now()) - fim.iniciadaEm)}. ${fim.sans.length} ${fim.sans.length === 1 ? 'lance' : 'lances'}.`;
 
-  // mesmo formato fonético do histórico da tela de jogo
+  // mesmo formato do histórico da tela de jogo: notação visível,
+  // forma fonética só para o leitor de tela
   const replay = new Chess();
-  const falados = fim.sans.map((san) => {
-    const lance = replay.move(san);
-    return descreverLanceFalado(lance) + sufixoXeque(lance.san);
-  });
-  const lista = $('historico-final');
-  lista.textContent = '';
-  for (let i = 0; i < falados.length; i += 2) {
-    const item = document.createElement('li');
-    item.textContent = `${falados[i]}${falados[i + 1] ? `, ${falados[i + 1]}` : ''}`;
-    lista.appendChild(item);
-  }
+  const lances = fim.sans.map((san) => replay.move(san));
+  preencherListaLances($('historico-final'), lances);
 
   // Compartilhar só aparece se o navegador suporta compartilhar arquivos
   const { arquivo } = pgnDaPartida(fim);

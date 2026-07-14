@@ -6,11 +6,6 @@ export const NOMES_COLUNAS = {
   e: 'eva', f: 'felix', g: 'gustav', h: 'hector',
 };
 
-export const NOMES_LINHAS = {
-  1: 'um', 2: 'dois', 3: 'três', 4: 'quatro',
-  5: 'cinco', 6: 'seis', 7: 'sete', 8: 'oito',
-};
-
 // nome, artigo definido e gênero de cada peça (chess.js usa letras minúsculas)
 export const PECAS = {
   p: { nome: 'peão', artigo: 'o' },
@@ -23,8 +18,10 @@ export const PECAS = {
 
 export const VALOR_PECAS = { p: 1, n: 3, b: 3, r: 5, q: 9 };
 
+// "eva 1": coluna fonética + número em dígito — o leitor de tela fala o
+// dígito naturalmente, e o texto fica curto
 export function nomeCasa(casa) {
-  return `${NOMES_COLUNAS[casa[0]]}-${NOMES_LINHAS[casa[1]]}`;
+  return `${NOMES_COLUNAS[casa[0]]} ${casa[1]}`;
 }
 
 export function nomePeca(letra) {
@@ -37,8 +34,8 @@ export function nomeCor(cor) {
 
 // Descreve um lance verboso do chess.js em português por extenso.
 // Com `comOrigem`, inclui de onde a peça vem — usado nas perguntas de
-// desambiguação (ex.: "peão de bella captura em cesar-três").
-// Sem origem, fala no estilo da notação: "cavalo felix-três", sem "para".
+// desambiguação (ex.: "peão de bella captura em cesar 3").
+// Sem origem, fala no estilo da notação: "cavalo felix 3", sem "para".
 export function descreverLance(lance, comOrigem = false) {
   if (lance.san.startsWith('O-O-O')) return 'roque grande';
   if (lance.san.startsWith('O-O')) return 'roque pequeno';
@@ -56,7 +53,7 @@ export function descreverLance(lance, comOrigem = false) {
     texto = `${peca} toma ${capturada} em ${destino}`;
     if (lance.flags.includes('e')) texto += ', en passant';
   } else {
-    // "de X para Y" só quando a origem é falada; sem origem, "cavalo felix-três"
+    // "de X para Y" só quando a origem é falada; sem origem, "cavalo felix 3"
     texto = comOrigem ? `${peca} para ${destino}` : `${peca} ${destino}`;
   }
   if (lance.promotion) {
@@ -66,8 +63,8 @@ export function descreverLance(lance, comOrigem = false) {
 }
 
 // Forma falada do dia a dia: lance simples de peão dispensa o nome da peça
-// ("eva-quatro" em vez de "peão eva-quatro") e peça vai direto ao destino,
-// sem "para" ("cavalo felix-três"). Usada nos anúncios de lance aplicado
+// ("eva 4" em vez de "peão eva 4") e peça vai direto ao destino,
+// sem "para" ("cavalo felix 3"). Usada nos anúncios de lance aplicado
 // e no histórico.
 export function descreverLanceFalado(lance) {
   if (lance.san.startsWith('O-O-O')) return 'roque grande';
@@ -76,7 +73,7 @@ export function descreverLanceFalado(lance) {
   const destino = nomeCasa(lance.to);
   let texto;
   if (lance.captured) {
-    // "dama toma felix-sete"; peão identifica-se pela coluna: "eva toma david-cinco"
+    // "dama toma felix 7"; peão identifica-se pela coluna: "eva toma david 5"
     const quem = lance.piece === 'p' ? NOMES_COLUNAS[lance.from[0]] : nomePeca(lance.piece);
     texto = `${quem} toma ${destino}`;
     if (lance.flags.includes('e')) texto += ', en passant';
@@ -89,6 +86,26 @@ export function descreverLanceFalado(lance) {
     texto += `, promove a ${nomePeca(lance.promotion)}`;
   }
   return texto;
+}
+
+// Preenche um <ol> de histórico com um item por lance completo (par
+// brancas/pretas). A notação (ex.: "e4, e5") fica visível; a forma fonética
+// ("eva 4, eva 5") é só para o leitor de tela. O número do lance vem da
+// numeração do próprio <ol>; repeti-lo no texto faria o leitor falar "1. 1.".
+export function preencherListaLances(lista, lances) {
+  lista.textContent = '';
+  for (let i = 0; i < lances.length; i += 2) {
+    const par = [lances[i], lances[i + 1]].filter(Boolean);
+    const item = document.createElement('li');
+    const visivel = document.createElement('span');
+    visivel.setAttribute('aria-hidden', 'true');
+    visivel.textContent = par.map((l) => l.san).join(', ');
+    const falado = document.createElement('span');
+    falado.className = 'sr-only';
+    falado.textContent = par.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san)).join(', ');
+    item.append(visivel, falado);
+    lista.appendChild(item);
+  }
 }
 
 // Sufixo de xeque para listas de histórico, a partir do SAN.

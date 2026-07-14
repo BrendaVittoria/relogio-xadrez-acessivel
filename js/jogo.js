@@ -9,7 +9,7 @@ import { interpretarEntrada, resolverPromocao } from './parser.js';
 import { identificarComando, textoAjuda } from './comandos.js';
 import {
   anunciarLanceAplicado, descreverLance, descreverLanceFalado, sufixoXeque,
-  nomeCasa, nomeCor, nomePeca,
+  nomeCasa, nomeCor, nomePeca, preencherListaLances,
   tempoFalado, tempoVisual, PECAS, VALOR_PECAS,
 } from './fala.js';
 import { gravarPartidaAtual } from './armazenamento.js';
@@ -798,7 +798,7 @@ export class Partida {
     this.relogio.pressionar();
     this.fotoInicioTurno = this.relogio.fotografia();
 
-    // anúncio sem a cor ("eva-quatro."): quem registrou sabe de quem foi;
+    // anúncio sem a cor ("eva 4."): quem registrou sabe de quem foi;
     // o comando r mantém a cor, que ajuda fora de contexto
     const anuncio = anunciarLanceAplicado(lance, this.chess);
     this.ultimoLanceAnunciado = `${nomeCor(lance.color)}: ${anuncio}`;
@@ -811,7 +811,7 @@ export class Partida {
 
     // Digitação que começou numa casa do tabuleiro: devolver o foco a ele,
     // na casa de destino. O leitor de tela já lê o rótulo da casa focada
-    // ("felix-três: cavalo branco"), então anunciar o lance por cima seria
+    // ("felix 3: cavalo branco"), então anunciar o lance por cima seria
     // repetitivo — só o xeque, que a casa não conta, é anunciado. O mesmo
     // vale para lances feitos diretamente no tabuleiro. No fim de jogo o
     // anúncio completo permanece (a tela de resultado toma o foco).
@@ -875,18 +875,7 @@ export class Partida {
   }
 
   _atualizarHistorico() {
-    // histórico por extenso na convenção fonética: "1. eva-quatro, eva-cinco"
-    // (o número do lance vem da numeração do próprio <ol>; repeti-lo no texto
-    // faria o leitor de tela falar "1. 1. ...")
-    const lances = this.chess.history({ verbose: true });
-    const falados = lances.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san));
-    const lista = this._el.historico;
-    lista.textContent = '';
-    for (let i = 0; i < falados.length; i += 2) {
-      const item = document.createElement('li');
-      item.textContent = `${falados[i]}${falados[i + 1] ? `, ${falados[i + 1]}` : ''}`;
-      lista.appendChild(item);
-    }
+    preencherListaLances(this._el.historico, this.chess.history({ verbose: true }));
   }
 
   _atualizarTudo() {

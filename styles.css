@@ -179,33 +179,36 @@ button:hover { border-color: var(--foco); }
 #tabuleiro, #tabuleiro-leitura { margin-top: 0.75rem; }
 
 /* O tabuleiro é sempre um quadrado inteiro na tela: nunca cortado, nunca
-   retangular. Limitado pelo menor lado da janela (vmin/dvmin), pela largura
-   disponível e por um teto para não ficar gigante no desktop. */
+   retangular. Limitado pelo menor lado da janela (vmin), pela largura
+   disponível e por um teto para não ficar gigante no desktop. A unidade é
+   a estática (vmin, não dvmin): a dinâmica muda quando a barra de endereço
+   do celular some na rolagem, redimensionando o tabuleiro no meio dela. */
 .tab-grade {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-  aspect-ratio: 1 / 1;
   width: min(100%, 88vmin, 30rem);
-  width: min(100%, 88dvmin, 30rem);
   border: 3px solid var(--borda);
   box-sizing: border-box;
 }
 
+/* Cada casa se faz quadrada sozinha (altura = padding de 100% da própria
+   largura) — não depende de aspect-ratio nem de altura herdada da grade,
+   que quebram em navegadores de celular. */
 .tab-casa {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  height: 0;
   border: 0;
   border-radius: 0;
   margin: 0;
-  padding: 0;
+  padding: 0 0 100%;
   line-height: 1;
 }
 
 .tab-casa.clara { background: var(--casa-clara); }
 .tab-casa.escura { background: var(--casa-escura); }
 .tab-casa img {
+  position: absolute;
+  inset: 6%;
   width: 88%;
   height: 88%;
   pointer-events: none;
