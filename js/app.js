@@ -506,14 +506,14 @@ function ligarEventos() {
     e.target.textContent = mostrar ? 'Ocultar histórico' : 'Ver histórico';
   });
 
-  // tabuleiro somente leitura no modo digitação
+  // tabuleiro do modo digitação (aceita lances por toque também)
   $('btn-mostrar-tabuleiro').addEventListener('click', (e) => {
-    const alvo = $('tabuleiro-leitura');
+    const alvo = $('tabuleiro-digitacao');
     const mostrar = alvo.hidden;
     alvo.hidden = !mostrar;
     e.target.setAttribute('aria-expanded', String(mostrar));
     e.target.textContent = mostrar ? 'Ocultar tabuleiro' : 'Mostrar tabuleiro';
-    if (mostrar && jogoAtual) jogoAtual.tabuleiroLeitura.atualizar();
+    if (mostrar && jogoAtual) jogoAtual.tabuleiroDigitacao.atualizar();
   });
 
   // painel de ações do modo tabuleiro

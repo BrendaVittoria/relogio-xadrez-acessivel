@@ -176,7 +176,7 @@ button:hover { border-color: var(--foco); }
 
 /* ---------------- Tabuleiro ---------------- */
 
-#tabuleiro, #tabuleiro-leitura { margin-top: 0.75rem; }
+#tabuleiro, #tabuleiro-digitacao { margin-top: 0.75rem; }
 
 /* O tabuleiro é sempre um quadrado inteiro na tela: nunca cortado, nunca
    retangular. Limitado pelo menor lado da janela (vmin), pela largura
@@ -348,15 +348,17 @@ section { margin-top: 1rem; }
   /* a dica do NVDA é para computador; no celular só ocupa altura */
   .tab-coordenadas { display: none; }
 
-  #tabuleiro, #tabuleiro-leitura { margin-top: 0.4rem; }
+  #tabuleiro, #tabuleiro-digitacao { margin-top: 0.4rem; }
 
   /* O tabuleiro ocupa a largura toda e também é limitado pela ALTURA que
      sobra na tela: 100svh (altura com a barra de endereço visível — o pior
-     caso) menos o espaço dos relógios, botões e caixa de lances (~21rem,
-     já contando indicador de pausa e "na vez"). O piso de 13rem garante
-     casas tocáveis mesmo em telas muito baixas — nesse caso extremo a
-     página rola, mas o tabuleiro continua inteiro e estável. */
+     caso) menos o espaço dos relógios, botões e caixa de lances (~16rem,
+     já contando indicador de pausa e "na vez"; os controles de revisão
+     ficam recolhidos e não entram na conta — abertos, a página rola um
+     pouco, sem redimensionar nada). O piso de 13rem garante casas tocáveis
+     mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
+     tabuleiro continua inteiro e estável. */
   .tab-grade {
-    width: max(min(100%, 30rem, calc(100svh - 21rem)), 13rem);
+    width: max(min(100%, 30rem, calc(100svh - 16rem)), 13rem);
   }
 }

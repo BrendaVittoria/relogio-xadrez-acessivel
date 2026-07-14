@@ -50,6 +50,7 @@ export class Partida {
     this.posicaoRevisao = null;
     this.chessRevisao = null;
     this.correcaoTabuleiro = null; // {indice} durante a correção pelo tabuleiro
+    this.revisaoAberta = false; // controles de revisão à vista (botão Revisão)
     this.modoEntrada = config.modoEntrada;
     this.finalizada = false;
     this.jaComecou = false; // vira true no primeiro disparo real do relógio
@@ -81,8 +82,10 @@ export class Partida {
       btnComecar: document.getElementById('btn-comecar'),
       btnVerHistorico: document.getElementById('btn-ver-historico'),
       areaHistorico: document.getElementById('area-historico'),
+      areaRevisao: document.getElementById('area-revisao'),
+      btnRevisao: document.getElementById('btn-revisao'),
       btnModo: document.querySelector('#painel-acoes button[data-acao="modo"]'),
-      tabuleiroLeitura: document.getElementById('tabuleiro-leitura'),
+      tabuleiroDigitacao: document.getElementById('tabuleiro-digitacao'),
     };
 
     // os tabuleiros mostram a posição em revisão, quando houver
@@ -98,12 +101,17 @@ export class Partida {
       // na correção pelo tabuleiro, ele volta a aceitar lances
       emRevisao: () => this.posicaoRevisao !== null && !this.correcaoTabuleiro,
     });
-    this.tabuleiroLeitura = new TabuleiroAcessivel(this._el.tabuleiroLeitura, {
-      somenteLeitura: true,
+    // o tabuleiro do modo digitação também aceita lances: quem preferir
+    // pode mexer nele em vez de digitar
+    this.tabuleiroDigitacao = new TabuleiroAcessivel(this._el.tabuleiroDigitacao, {
+      somenteLeitura: false,
       obterChess,
       anunciar: this.anunciar,
+      aoTentarLance: (de, para, precisaPromocao) =>
+        this._lanceDoTabuleiro(de, para, precisaPromocao),
       aoDigitar: (caractere) => this._digitarDoTabuleiro(caractere),
       aoNavegarHistorico: (delta) => this.navegarHistorico(delta),
+      emRevisao: () => this.posicaoRevisao !== null && !this.correcaoTabuleiro,
     });
   }
 
@@ -305,19 +313,31 @@ export class Partida {
     if (this.correcaoTabuleiro) {
       this._aplicarCorrecao(this.correcaoTabuleiro.indice, (novo) =>
         novo.move({ from: pendente.de, to: pendente.para, promotion: letra }));
-      this.tabuleiro.focarTabuleiro();
+      this._focarTabuleiroVisivel();
       return;
     }
     const lance = this.chess.move({ from: pendente.de, to: pendente.para, promotion: letra });
     this._aposLance(lance, true);
-    this.tabuleiro.focarTabuleiro();
+    this._focarTabuleiroVisivel();
   }
 
   cancelarPromocaoTabuleiro() {
     if (!this.pendenciaPromocaoTabuleiro) return;
     this.pendenciaPromocaoTabuleiro = null;
     this.anunciar('Promoção cancelada.');
-    this.tabuleiro.focarTabuleiro();
+    this._focarTabuleiroVisivel();
+  }
+
+  // O lance pode ter vindo do tabuleiro principal ou do tabuleiro do modo
+  // digitação: o foco volta para o que estiver na tela.
+  _focarTabuleiroVisivel() {
+    if (this.modoEntrada === 'board') {
+      this.tabuleiro.focarTabuleiro();
+    } else if (!this._el.tabuleiroDigitacao.hidden) {
+      this.tabuleiroDigitacao.focarTabuleiro();
+    } else {
+      this.tabuleiro.focarTabuleiro();
+    }
   }
 
   // ---------------- comandos ----------------
@@ -331,6 +351,7 @@ export class Partida {
       case 'm': this._comandoMaterial(); break;
       case 'back': this._comandoDesfazer(); break;
       case 'corrigir': this._comandoCorrigir(arg); break;
+      case 'revisao': this.alternarRevisao(); break;
       case 'note': this.registrarNota(arg); break;
       case 'modo': this.alternarModo(); break;
       case 'hold': this._comandoPausar(); break;
@@ -437,6 +458,46 @@ export class Partida {
 
   // ---------------- revisão do histórico (vírgula/ponto no tabuleiro) ----
 
+  // Botão Revisão do painel de ações e comando "revisao": mostra ou
+  // esconde os controles de toque (Lance anterior, Próximo lance e Ver
+  // histórico). Recolhidos, o tabuleiro fica com o máximo de espaço; no
+  // teclado, vírgula/ponto continuam navegando sem precisar abrir nada.
+  alternarRevisao() {
+    if (this.revisaoAberta) {
+      this._fecharRevisao(true);
+      return;
+    }
+    this.revisaoAberta = true;
+    this._atualizarAreaRevisao();
+    this.anunciar('Revisão aberta: use Lance anterior e Próximo lance, ou vírgula e ponto no tabuleiro.');
+  }
+
+  _fecharRevisao(anunciarFechamento) {
+    const estavaNavegando = this.posicaoRevisao !== null;
+    this.revisaoAberta = false;
+    this.correcaoTabuleiro = null; // fechar desiste da correção em curso
+    this._sairDaRevisao();
+    if (estavaNavegando) {
+      this.tabuleiro.atualizar();
+      this.tabuleiroDigitacao.atualizar();
+    }
+    // recolher o histórico que o Ver histórico tenha aberto (modo tabuleiro)
+    this._el.btnVerHistorico.setAttribute('aria-expanded', 'false');
+    this._el.btnVerHistorico.textContent = 'Ver histórico';
+    if (this.modoEntrada === 'board') this._el.areaHistorico.hidden = true;
+    this._atualizarAreaRevisao();
+    if (anunciarFechamento) {
+      this.anunciar(estavaNavegando ? 'Revisão fechada. Posição atual.' : 'Revisão fechada.');
+    }
+  }
+
+  _atualizarAreaRevisao() {
+    this._el.areaRevisao.hidden = !this.revisaoAberta;
+    // na digitação o histórico já está sempre à vista; o botão seria redundante
+    this._el.btnVerHistorico.hidden = this.modoEntrada === 'text';
+    this._el.btnRevisao.textContent = this.revisaoAberta ? 'Fechar revisão' : 'Revisão';
+  }
+
   // Pública: usada pelas teclas vírgula/ponto e pelos botões de toque.
   navegarHistorico(delta) {
     this.correcaoTabuleiro = null; // navegar desiste da correção em curso
@@ -461,7 +522,7 @@ export class Partida {
       this.posicaoRevisao = null;
       this.chessRevisao = null;
       this.tabuleiro.atualizar();
-      this.tabuleiroLeitura.atualizar();
+      this.tabuleiroDigitacao.atualizar();
       this.anunciar('Posição atual.');
       return;
     }
@@ -472,7 +533,7 @@ export class Partida {
     }
     this.chessRevisao = c;
     this.tabuleiro.atualizar();
-    this.tabuleiroLeitura.atualizar();
+    this.tabuleiroDigitacao.atualizar();
     if (alvo === 0) {
       this.anunciar('Posição inicial.');
     } else {
@@ -599,7 +660,7 @@ export class Partida {
       this.correcaoTabuleiro = null;
       this._sairDaRevisao();
       this.tabuleiro.atualizar();
-      this.tabuleiroLeitura.atualizar();
+      this.tabuleiroDigitacao.atualizar();
       this.anunciar('Correção cancelada.');
       return;
     }
@@ -720,11 +781,11 @@ export class Partida {
     const digitacao = this.modoEntrada === 'text';
     this._el.modoDigitacao.hidden = !digitacao;
     this._el.modoTabuleiro.hidden = digitacao;
+    // trocar de modo recolhe os controles de revisão; cada modo reabre
+    // pelo botão Revisão quando quiser
+    this._fecharRevisao(false);
     // histórico: sempre à vista na digitação; no tabuleiro fica recolhido
-    // atrás do botão Ver histórico, para não poluir a tela
-    this._el.btnVerHistorico.hidden = digitacao;
-    this._el.btnVerHistorico.setAttribute('aria-expanded', 'false');
-    this._el.btnVerHistorico.textContent = 'Ver histórico';
+    // atrás do Ver histórico da revisão, para não poluir a tela
     this._el.areaHistorico.hidden = !digitacao;
     // o botão do painel leva sempre ao OUTRO modo
     this._el.btnModo.textContent = digitacao ? 'Tabuleiro' : 'Digitação';
@@ -840,8 +901,8 @@ export class Partida {
       this.tabuleiro.focarCasa(casa);
       return true;
     }
-    if (!this._el.tabuleiroLeitura.hidden) {
-      this.tabuleiroLeitura.focarCasa(casa);
+    if (!this._el.tabuleiroDigitacao.hidden) {
+      this.tabuleiroDigitacao.focarCasa(casa);
       return true;
     }
     return false;
@@ -882,7 +943,7 @@ export class Partida {
     this._atualizarRelogios();
     this._atualizarHistorico();
     this.tabuleiro.atualizar();
-    this.tabuleiroLeitura.atualizar();
+    this.tabuleiroDigitacao.atualizar();
   }
 
   _salvar() {

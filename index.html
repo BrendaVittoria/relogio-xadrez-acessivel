@@ -135,6 +135,7 @@
           <button type="button" data-acao="holdgo" id="btn-pausar">Pausar</button>
           <button type="button" data-acao="back">Apagar</button>
           <button type="button" data-acao="corrigir">Corrigir</button>
+          <button type="button" data-acao="revisao" id="btn-revisao">Revisão</button>
           <button type="button" data-acao="draw">Empate</button>
           <button type="button" data-acao="resign">Abandono</button>
           <button type="button" data-acao="t">Tempo</button>
@@ -172,23 +173,28 @@
           <button type="button" id="btn-ver-comandos" aria-expanded="false">Ver comandos</button>
         </div>
         <ul id="lista-comandos" hidden></ul>
-        <div id="tabuleiro-leitura" hidden></div>
+        <!-- tabuleiro completo: aceita lances por toque, além de digitar -->
+        <div id="tabuleiro-digitacao" hidden></div>
       </div>
 
       <!-- Modo Tabuleiro -->
       <div id="modo-tabuleiro" hidden>
         <div id="tabuleiro"></div>
-        <!-- navegação pelo histórico por toque (no teclado: vírgula/ponto) -->
+      </div>
+
+      <!-- Controles de revisão do histórico: recolhidos atrás do botão
+           Revisão do painel de ações, para o tabuleiro ter o máximo de
+           espaço. No teclado, vírgula/ponto navegam sem precisar abrir. -->
+      <div id="area-revisao" hidden>
         <div class="acoes-linha">
           <button type="button" id="btn-lance-anterior">Lance anterior</button>
           <button type="button" id="btn-lance-proximo">Próximo lance</button>
+          <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
         </div>
       </div>
 
-      <!-- Histórico fora dos blocos de modo: navegável também no modo
-           tabuleiro. Lá ele fica recolhido atrás do botão, para a tela
-           ficar limpa (baixa visão foca no tabuleiro). -->
-      <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
+      <!-- Histórico fora dos blocos de modo: sempre à vista na digitação;
+           no modo tabuleiro aparece pelo Ver histórico da revisão -->
       <div id="area-historico">
         <h3 id="titulo-historico">Histórico de lances</h3>
         <ol id="historico" aria-labelledby="titulo-historico"></ol>
