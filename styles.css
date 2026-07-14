@@ -320,33 +320,43 @@ section { margin-top: 1rem; }
   /* o título do app sai de cena durante a partida para liberar altura;
      a tela de jogo tem o próprio título (h2, para leitores de tela) */
   body:has(#tela-jogo:not([hidden])) header { display: none; }
-  body:has(#tela-jogo:not([hidden])) main { padding-bottom: 0.75rem; }
+  body:has(#tela-jogo:not([hidden])) main { padding: 0 0.5rem 0.75rem; }
 
-  #tela-jogo { margin-top: 0.5rem; }
+  #tela-jogo { margin-top: 0.25rem; }
 
-  /* relógios sempre lado a lado, numa linha só, mais baixos */
-  #relogios { gap: 0.5rem; margin: 0.4rem 0 0.6rem; }
+  /* relógios sempre lado a lado, numa linha só, com as linhas internas
+     mais juntas; o TEMPO continua grande — ele é o centro do app */
+  #relogios { gap: 0.5rem; margin: 0.25rem 0 0.5rem; }
   .relogio { flex-basis: 0; min-width: 0; padding: 0.25rem 0.6rem; }
-  .relogio-tempo { font-size: 1.6rem; }
+  .relogio-rotulo { font-size: 0.9rem; line-height: 1.3; }
+  .relogio-tempo { font-size: 1.6rem; line-height: 1.2; }
+  .relogio-vez { font-size: 0.9rem; line-height: 1.3; }
+  #indicador-pausa { font-size: 0.95rem; }
 
-  /* botões e entrada mais compactos na tela de jogo — exceto as casas do
-     tabuleiro, que são botões cujo padding-bottom de 100% as faz quadradas */
-  #tela-jogo button:not(.tab-casa) { padding: 0.5rem 0.9rem; margin: 0.15rem 0.3rem 0.15rem 0; }
-  #area-entrada label { margin-top: 0.35rem; }
-  #entrada { font-size: 1.2rem; padding: 0.45rem 0.6rem; }
+  /* botões e caixa de lances pequenos — exceto as casas do tabuleiro, que
+     são botões cujo padding-bottom de 100% as faz quadradas. A caixa não
+     precisa ser grande parada: o teclado dá zoom nela ao receber o foco. */
+  #tela-jogo button:not(.tab-casa) {
+    font-size: 0.95rem;
+    padding: 0.4rem 0.75rem;
+    margin: 0.15rem 0.3rem 0.15rem 0;
+  }
+  #area-entrada label { font-size: 0.9rem; margin: 0.25rem 0 0.15rem; }
+  /* nunca menos de 16px na caixa: abaixo disso o iOS dá zoom na página toda */
+  #entrada { font-size: 1.05rem; padding: 0.35rem 0.5rem; }
 
   /* a dica do NVDA é para computador; no celular só ocupa altura */
   .tab-coordenadas { display: none; }
 
-  #tabuleiro, #tabuleiro-leitura { margin-top: 0.5rem; }
+  #tabuleiro, #tabuleiro-leitura { margin-top: 0.4rem; }
 
-  /* O tabuleiro também é limitado pela ALTURA que sobra na tela: 100svh
-     (altura da tela com a barra de endereço visível — o pior caso) menos
-     o espaço dos relógios, botões e caixa de lances (~24rem, já contando
-     indicador de pausa e "na vez"). O piso de 13rem garante casas tocáveis
-     mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
-     tabuleiro continua inteiro e estável. */
+  /* O tabuleiro ocupa a largura toda e também é limitado pela ALTURA que
+     sobra na tela: 100svh (altura com a barra de endereço visível — o pior
+     caso) menos o espaço dos relógios, botões e caixa de lances (~21rem,
+     já contando indicador de pausa e "na vez"). O piso de 13rem garante
+     casas tocáveis mesmo em telas muito baixas — nesse caso extremo a
+     página rola, mas o tabuleiro continua inteiro e estável. */
   .tab-grade {
-    width: max(min(100%, 88vmin, 30rem, calc(100svh - 24rem)), 13rem);
+    width: max(min(100%, 30rem, calc(100svh - 21rem)), 13rem);
   }
 }
