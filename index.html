@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101418">
+  <title>Relógio de Xadrez Acessível</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Relógio de Xadrez Acessível</h1>
+  </header>
+
+  <!-- Região de anúncios para leitores de tela (separada do relógio) -->
+  <div id="anunciador" aria-live="polite" class="sr-only"></div>
+
+  <main>
+    <!-- ======================= RECUPERAÇÃO ======================= -->
+    <section id="tela-recuperacao" hidden aria-labelledby="titulo-recuperacao">
+      <h2 id="titulo-recuperacao">Partida em andamento encontrada</h2>
+      <p id="recuperacao-descricao"></p>
+      <div class="acoes-linha">
+        <button type="button" id="btn-recuperar">Continuar a partida</button>
+        <button type="button" id="btn-descartar-recuperacao">Descartar e começar do zero</button>
+      </div>
+    </section>
+
+    <!-- ======================= SALA DE ESPERA ======================= -->
+    <section id="tela-setup" hidden aria-labelledby="titulo-setup">
+      <h2 id="titulo-setup">Sala de espera</h2>
+      <form id="form-setup" novalidate>
+        <fieldset>
+          <legend>Modo de entrada de lances</legend>
+          <label><input type="radio" name="modo-entrada" value="text" checked> Digitação</label>
+          <label><input type="radio" name="modo-entrada" value="board"> Tabuleiro</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Tempo de jogo</legend>
+          <div id="lista-presets">
+            <!-- presets fixos + promovidos são inseridos via JS -->
+          </div>
+          <label><input type="radio" name="preset-tempo" value="custom"> Personalizado</label>
+          <div id="campos-personalizado" hidden>
+            <label for="tempo-minutos">Minutos por jogador</label>
+            <input type="number" id="tempo-minutos" min="1" max="600" inputmode="numeric">
+            <label for="tempo-incremento">Incremento em segundos (Fischer)</label>
+            <input type="number" id="tempo-incremento" min="0" max="600" inputmode="numeric" value="0">
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Identificação (opcional)</legend>
+          <label for="nome-arbitro">Nome do árbitro</label>
+          <input type="text" id="nome-arbitro" autocomplete="name">
+          <label for="nome-brancas">Jogador das Brancas</label>
+          <input type="text" id="nome-brancas" autocomplete="off">
+          <label for="nome-pretas">Jogador das Pretas</label>
+          <input type="text" id="nome-pretas" autocomplete="off">
+          <label for="nome-torneio">Nome do torneio</label>
+          <input type="text" id="nome-torneio" autocomplete="off">
+        </fieldset>
+
+        <fieldset>
+          <legend>Aparência do tabuleiro</legend>
+          <label for="tema-tabuleiro">Cores das casas</label>
+          <select id="tema-tabuleiro"></select>
+          <span class="amostra-tema" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+          <p class="ajuda">Opções de alto contraste para baixa visão. Vale para este aparelho e pode ser trocado também durante a partida, no painel de ações.</p>
+        </fieldset>
+
+        <fieldset>
+          <legend>Avisos de tempo</legend>
+          <label for="alarmes">Alarmes de tempo (minutos restantes, separados por vírgula)</label>
+          <input type="text" id="alarmes" value="30,15,5" inputmode="numeric"
+                 aria-describedby="alarmes-ajuda">
+          <p id="alarmes-ajuda" class="ajuda">Exemplo: 30,15,5 avisa quando faltarem 30, 15 e 5 minutos. Deixe vazio para não ter alarmes.</p>
+          <p id="alarmes-erro" class="erro" role="alert" hidden></p>
+          <label><input type="checkbox" id="som-avisos" checked> Ativar bipes sonoros</label>
+        </fieldset>
+
+        <button type="submit" id="btn-iniciar">Iniciar partida</button>
+      </form>
+
+      <details id="historico-partidas">
+        <summary>Histórico de partidas (este aparelho)</summary>
+        <p class="ajuda">As últimas 50 partidas encerradas ficam guardadas só neste aparelho. O sistema pode limpar esses dados — baixe o PGN do que for importante.</p>
+        <ul id="lista-historico"></ul>
+        <p id="historico-vazio" class="ajuda">Nenhuma partida no histórico ainda.</p>
+        <button type="button" id="btn-limpar-historico" hidden>Apagar todo o histórico</button>
+      </details>
+
+      <details id="dados-locais">
+        <summary>Dados locais (backup)</summary>
+        <p class="ajuda">Suas preferências e contadores ficam salvos só neste aparelho. Exporte um arquivo de backup para levar a outro dispositivo.</p>
+        <div class="acoes-linha">
+          <button type="button" id="btn-exportar-dados">Exportar dados locais</button>
+          <button type="button" id="btn-importar-dados">Importar dados</button>
+          <input type="file" id="arquivo-importar" accept="application/json,.json" class="sr-only" aria-hidden="true" tabindex="-1">
+        </div>
+      </details>
+    </section>
+
+    <!-- ======================= TELA DE JOGO ======================= -->
+    <section id="tela-jogo" hidden aria-labelledby="titulo-jogo">
+      <!-- título neutro: a tela abre com os relógios ainda parados, então
+           não pode afirmar que a partida está "em andamento" -->
+      <h2 id="titulo-jogo" class="sr-only">Tela de jogo</h2>
+
+      <div id="relogios">
+        <div class="relogio" id="relogio-brancas">
+          <span class="relogio-rotulo">Brancas</span>
+          <span class="relogio-tempo" id="tempo-brancas">--:--</span>
+          <span class="relogio-vez" id="vez-brancas" hidden>na vez</span>
+        </div>
+        <div class="relogio" id="relogio-pretas">
+          <span class="relogio-rotulo">Pretas</span>
+          <span class="relogio-tempo" id="tempo-pretas">--:--</span>
+          <span class="relogio-vez" id="vez-pretas" hidden>na vez</span>
+        </div>
+        <p id="indicador-pausa" hidden>Relógios pausados</p>
+      </div>
+
+      <button type="button" id="btn-comecar" hidden>Iniciar relógio</button>
+
+      <!-- Painel de ações: disponível nos dois modos de entrada -->
+      <button type="button" id="btn-acoes" aria-expanded="false">Ver ações</button>
+      <div id="painel-acoes" hidden>
+        <div class="acoes-grade">
+          <button type="button" data-acao="modo">Tabuleiro</button>
+          <button type="button" data-acao="holdgo" id="btn-pausar">Pausar</button>
+          <button type="button" data-acao="back">Apagar</button>
+          <button type="button" data-acao="corrigir">Corrigir</button>
+          <button type="button" data-acao="draw">Empate</button>
+          <button type="button" data-acao="resign">Abandono</button>
+          <button type="button" data-acao="t">Tempo</button>
+          <button type="button" data-acao="p">Posição</button>
+          <button type="button" data-acao="r">Repetir lance</button>
+          <button type="button" data-acao="m">Material</button>
+          <button type="button" data-acao="end">Encerrar partida</button>
+          <button type="button" data-acao="?">Ajuda</button>
+        </div>
+        <div id="area-nota">
+          <label for="campo-nota">Nota</label>
+          <input type="text" id="campo-nota" autocomplete="off">
+          <button type="button" id="btn-registrar-nota">Registrar</button>
+        </div>
+        <div id="area-tema">
+          <label for="tema-tabuleiro-jogo">Cores das casas</label>
+          <select id="tema-tabuleiro-jogo"></select>
+        </div>
+      </div>
+
+      <!-- Entrada por digitação: fica fora dos blocos de modo para quem
+           está no computador poder digitar lances também no modo tabuleiro -->
+      <div id="area-entrada">
+        <label for="entrada">Lance ou comando (digite ? para ajuda)</label>
+        <input type="text" id="entrada" autocomplete="off" autocapitalize="off"
+               autocorrect="off" spellcheck="false" enterkeyhint="send">
+      </div>
+
+      <!-- Modo Digitação -->
+      <div id="modo-digitacao" hidden>
+        <!-- contêiner de bloco: sem ele, o leitor de tela põe os botões
+             na mesma linha da caixa de edição -->
+        <div class="acoes-linha">
+          <button type="button" id="btn-mostrar-tabuleiro" aria-expanded="false">Mostrar tabuleiro</button>
+          <button type="button" id="btn-ver-comandos" aria-expanded="false">Ver comandos</button>
+        </div>
+        <ul id="lista-comandos" hidden></ul>
+        <div id="tabuleiro-leitura" hidden></div>
+      </div>
+
+      <!-- Modo Tabuleiro -->
+      <div id="modo-tabuleiro" hidden>
+        <div id="tabuleiro"></div>
+        <!-- navegação pelo histórico por toque (no teclado: vírgula/ponto) -->
+        <div class="acoes-linha">
+          <button type="button" id="btn-lance-anterior">Lance anterior</button>
+          <button type="button" id="btn-lance-proximo">Próximo lance</button>
+        </div>
+      </div>
+
+      <!-- Histórico fora dos blocos de modo: navegável também no modo
+           tabuleiro. Lá ele fica recolhido atrás do botão, para a tela
+           ficar limpa (baixa visão foca no tabuleiro). -->
+      <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
+      <div id="area-historico">
+        <h3 id="titulo-historico">Histórico de lances</h3>
+        <ol id="historico" aria-labelledby="titulo-historico"></ol>
+      </div>
+    </section>
+
+    <!-- ======================= TELA DE RESULTADO ======================= -->
+    <section id="tela-resultado" hidden aria-labelledby="titulo-resultado">
+      <h2 id="titulo-resultado">Fim da partida</h2>
+      <p id="resultado-texto"></p>
+      <p id="resultado-duracao"></p>
+      <h3 id="titulo-historico-final">Histórico completo</h3>
+      <ol id="historico-final" aria-labelledby="titulo-historico-final"></ol>
+      <div class="acoes-linha">
+        <button type="button" id="btn-baixar-pgn">Baixar PGN</button>
+        <button type="button" id="btn-compartilhar" hidden>Compartilhar</button>
+      </div>
+      <p id="aviso-compartilhar" class="ajuda" hidden>Depois de baixado, você pode anexar o arquivo manualmente no WhatsApp ou e-mail.</p>
+      <p id="aviso-pgn-pendente" class="ajuda">A partida ficou no histórico deste aparelho, mas o sistema pode limpar esses dados: baixe ou compartilhe o PGN para guardar uma cópia definitiva.</p>
+      <button type="button" id="btn-nova-partida">Nova partida</button>
+    </section>
+  </main>
+
+  <!-- Diálogo: promoção de peão (modo tabuleiro) -->
+  <dialog id="dialogo-promocao" aria-labelledby="titulo-promocao">
+    <h2 id="titulo-promocao">Promover peão a qual peça?</h2>
+    <div class="acoes-linha">
+      <button type="button" data-promocao="q">Dama</button>
+      <button type="button" data-promocao="r">Torre</button>
+      <button type="button" data-promocao="b">Bispo</button>
+      <button type="button" data-promocao="n">Cavalo</button>
+    </div>
+    <button type="button" id="btn-cancelar-promocao">Cancelar</button>
+  </dialog>
+
+  <!-- Diálogo: encerrar partida manualmente -->
+  <dialog id="dialogo-encerrar" aria-labelledby="titulo-encerrar">
+    <h2 id="titulo-encerrar">Encerrar partida</h2>
+    <form id="form-encerrar" method="dialog">
+      <fieldset>
+        <legend>Resultado</legend>
+        <label><input type="radio" name="resultado-manual" value="1-0" required> Vitória das Brancas (1-0)</label>
+        <label><input type="radio" name="resultado-manual" value="0-1"> Vitória das Pretas (0-1)</label>
+        <label><input type="radio" name="resultado-manual" value="1/2-1/2"> Empate (½-½)</label>
+      </fieldset>
+      <fieldset>
+        <legend>Motivo</legend>
+        <label><input type="radio" name="motivo-manual" value="abandono" checked> Abandono</label>
+        <label><input type="radio" name="motivo-manual" value="acordo"> Acordo</label>
+        <label><input type="radio" name="motivo-manual" value="tempo"> Tempo</label>
+        <label><input type="radio" name="motivo-manual" value="outro"> Outro</label>
+      </fieldset>
+      <div class="acoes-linha">
+        <button type="submit" value="confirmar">Confirmar encerramento</button>
+        <button type="button" id="btn-cancelar-encerrar">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

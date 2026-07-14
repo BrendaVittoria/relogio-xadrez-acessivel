@@ -1,0 +1,312 @@
+/* Relógio de Xadrez Acessível — tema escuro, alto contraste */
+
+:root {
+  --fundo: #101418;
+  --fundo-painel: #1a2027;
+  --texto: #f2f5f7;
+  --texto-suave: #b8c2cc;
+  --destaque: #ffd75e;
+  --erro: #ff8f8f;
+  --borda: #3a4550;
+  --casa-clara: #b9c4ce;
+  --casa-escura: #5a6b7c;
+  --foco: #6ecbff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+header { padding: 0.75rem 1rem 0; }
+h1 { font-size: 1.4rem; margin: 0 0 0.5rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.1rem; }
+
+main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 1rem 3rem;
+}
+
+/* Foco sempre visível e forte */
+:focus-visible {
+  outline: 3px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+fieldset {
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem 1rem;
+}
+legend { font-weight: 600; padding: 0 0.4rem; }
+
+label { display: block; margin: 0.6rem 0 0.25rem; }
+label:has(input[type="radio"]),
+label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  max-width: 24rem;
+  font-size: 1.125rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--fundo-painel);
+  color: var(--texto);
+}
+
+input[type="radio"],
+input[type="checkbox"] {
+  width: 1.35rem;
+  height: 1.35rem;
+  accent-color: var(--destaque);
+}
+
+button {
+  font-size: 1.05rem;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  border: 1px solid var(--borda);
+  background: var(--fundo-painel);
+  color: var(--texto);
+  cursor: pointer;
+  margin: 0.3rem 0.3rem 0.3rem 0;
+}
+button:hover { border-color: var(--foco); }
+
+#btn-iniciar,
+#btn-comecar,
+#btn-nova-partida,
+#btn-baixar-pgn {
+  background: var(--destaque);
+  color: #101418;
+  font-weight: 700;
+  border: none;
+}
+
+.ajuda { color: var(--texto-suave); font-size: 0.95rem; margin: 0.25rem 0 0.5rem; }
+.erro { color: var(--erro); font-weight: 600; }
+
+.acoes-linha { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+
+/* ---------------- Relógios ---------------- */
+
+#relogios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: stretch;
+  margin: 0.75rem 0 1rem;
+}
+
+.relogio {
+  flex: 1 1 10rem;
+  border: 2px solid var(--borda);
+  border-radius: 10px;
+  padding: 0.5rem 0.9rem;
+  background: var(--fundo-painel);
+  display: flex;
+  flex-direction: column;
+}
+
+.relogio.ativa { border-color: var(--destaque); }
+
+.relogio-rotulo { font-weight: 600; color: var(--texto-suave); }
+
+.relogio-tempo {
+  font-variant-numeric: tabular-nums;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.relogio-vez {
+  color: var(--destaque);
+  font-weight: 700;
+}
+
+#indicador-pausa {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  color: var(--destaque);
+}
+
+/* ---------------- Modo digitação ---------------- */
+
+#entrada { font-size: 1.35rem; max-width: 20rem; }
+
+#historico {
+  padding-left: 1.5rem;
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+#lista-comandos {
+  color: var(--texto-suave);
+  font-size: 0.95rem;
+  margin: 0.5rem 0;
+}
+#historico li, #historico-final li { font-variant-numeric: tabular-nums; }
+
+/* ---------------- Tabuleiro ---------------- */
+
+#tabuleiro, #tabuleiro-leitura { margin-top: 0.75rem; }
+
+/* O tabuleiro é sempre um quadrado inteiro na tela: nunca cortado, nunca
+   retangular. Limitado pelo menor lado da janela (vmin/dvmin), pela largura
+   disponível e por um teto para não ficar gigante no desktop. */
+.tab-grade {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  aspect-ratio: 1 / 1;
+  width: min(100%, 88vmin, 30rem);
+  width: min(100%, 88dvmin, 30rem);
+  border: 3px solid var(--borda);
+  box-sizing: border-box;
+}
+
+.tab-casa {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+.tab-casa.clara { background: var(--casa-clara); }
+.tab-casa.escura { background: var(--casa-escura); }
+.tab-casa img {
+  width: 88%;
+  height: 88%;
+  pointer-events: none;
+  filter: var(--halo-peca, none);
+}
+
+.tab-casa.selecionada {
+  box-shadow: inset 0 0 0 4px var(--cor-selecao, var(--destaque));
+}
+
+/* Amostra das cores do tema escolhido (decorativa) */
+.amostra-tema {
+  display: inline-grid;
+  grid-template-columns: repeat(2, 1.4rem);
+  border: 2px solid var(--borda);
+  vertical-align: middle;
+  margin-left: 0.6rem;
+}
+.amostra-tema span { width: 1.4rem; height: 1.4rem; }
+.amostra-tema span:nth-child(1),
+.amostra-tema span:nth-child(4) { background: var(--casa-clara); }
+.amostra-tema span:nth-child(2),
+.amostra-tema span:nth-child(3) { background: var(--casa-escura); }
+
+select {
+  font-size: 1.05rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--fundo-painel);
+  color: var(--texto);
+  max-width: 24rem;
+}
+
+.tab-casa:focus-visible {
+  outline: 4px solid var(--foco);
+  outline-offset: -4px;
+  z-index: 1;
+}
+
+.tab-coordenadas {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+/* ---------------- Painel de ações ---------------- */
+
+.acoes-grade {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+#painel-acoes {
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  background: var(--fundo-painel);
+}
+
+#area-nota { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: end; }
+#area-nota label { margin: 0; flex-basis: 100%; }
+#area-nota input { max-width: 18rem; }
+
+/* ---------------- Histórico de partidas ---------------- */
+
+#lista-historico {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+#lista-historico li {
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+/* ---------------- Diálogos ---------------- */
+
+dialog {
+  background: var(--fundo-painel);
+  color: var(--texto);
+  border: 2px solid var(--borda);
+  border-radius: 10px;
+  max-width: 28rem;
+  padding: 1rem 1.25rem;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
+
+/* ---------------- Telas ---------------- */
+
+section { margin-top: 1rem; }
+
+@media (max-width: 480px) {
+  .relogio-tempo { font-size: 1.7rem; }
+}
