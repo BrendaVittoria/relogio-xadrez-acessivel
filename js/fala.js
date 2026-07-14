@@ -89,21 +89,14 @@ export function descreverLanceFalado(lance) {
 }
 
 // Preenche um <ol> de histórico com um item por lance completo (par
-// brancas/pretas). A notação (ex.: "e4, e5") fica visível; a forma fonética
-// ("eva 4, eva 5") é só para o leitor de tela. O número do lance vem da
-// numeração do próprio <ol>; repeti-lo no texto faria o leitor falar "1. 1.".
+// brancas/pretas), na forma fonética: "eva 4, eva 5". O número do lance vem
+// da numeração do próprio <ol>; repeti-lo no texto faria o leitor falar "1. 1.".
 export function preencherListaLances(lista, lances) {
   lista.textContent = '';
   for (let i = 0; i < lances.length; i += 2) {
     const par = [lances[i], lances[i + 1]].filter(Boolean);
     const item = document.createElement('li');
-    const visivel = document.createElement('span');
-    visivel.setAttribute('aria-hidden', 'true');
-    visivel.textContent = par.map((l) => l.san).join(', ');
-    const falado = document.createElement('span');
-    falado.className = 'sr-only';
-    falado.textContent = par.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san)).join(', ');
-    item.append(visivel, falado);
+    item.textContent = par.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san)).join(', ');
     lista.appendChild(item);
   }
 }

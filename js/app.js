@@ -279,8 +279,7 @@ function preencherTelaResultado(fim) {
   $('resultado-duracao').textContent =
     `Duração da partida: ${duracaoFalada((fim.encerradaEm || Date.now()) - fim.iniciadaEm)}. ${fim.sans.length} ${fim.sans.length === 1 ? 'lance' : 'lances'}.`;
 
-  // mesmo formato do histórico da tela de jogo: notação visível,
-  // forma fonética só para o leitor de tela
+  // mesmo formato fonético do histórico da tela de jogo
   const replay = new Chess();
   const lances = fim.sans.map((san) => replay.move(san));
   preencherListaLances($('historico-final'), lances);

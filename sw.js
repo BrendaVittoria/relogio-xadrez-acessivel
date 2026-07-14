@@ -4,7 +4,7 @@
 // precisar mudar o número da versão (o número só força uma reinstalação
 // completa, se algum dia for necessário).
 
-const CACHE = 'relogio-xadrez-v1';
+const CACHE = 'relogio-xadrez-v2';
 
 const ARQUIVOS = [
   './',
@@ -68,7 +68,12 @@ self.addEventListener('fetch', (evento) => {
 
   const renovar = caches.open(CACHE).then(async (cache) => {
     try {
-      const daRede = await fetch(requisicao, { cache: 'no-cache' });
+      // um request de navegação não pode ser refeito com opções (TypeError);
+      // para navegações, o shell é buscado pelo caminho — sem isso, o
+      // index.html nunca se renovaria pela rede
+      const daRede = requisicao.mode === 'navigate'
+        ? await fetch('./index.html', { cache: 'no-cache' })
+        : await fetch(requisicao, { cache: 'no-cache' });
       if (daRede && daRede.ok) await cache.put(chave, daRede.clone());
       return daRede;
     } catch {
