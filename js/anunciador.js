@@ -34,6 +34,33 @@ function obterContexto() {
   return audioCtx;
 }
 
+// "Toc" curto e grave, como peça de madeira pousando no tabuleiro: um
+// triângulo com queda rápida de frequência soa percussivo, não musical —
+// bem diferente dos bipes de aviso, que são senoides agudas e longas.
+function toc(ctx, inicio, frequencia, volume) {
+  const osc = ctx.createOscillator();
+  const ganho = ctx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(frequencia, inicio);
+  osc.frequency.exponentialRampToValueAtTime(frequencia * 0.45, inicio + 0.07);
+  ganho.gain.setValueAtTime(0.0001, inicio);
+  ganho.gain.exponentialRampToValueAtTime(volume, inicio + 0.005);
+  ganho.gain.exponentialRampToValueAtTime(0.0001, inicio + 0.09);
+  osc.connect(ganho).connect(ctx.destination);
+  osc.start(inicio);
+  osc.stop(inicio + 0.12);
+}
+
+// Som de lance: um toc para movimento; captura ganha um segundo toc mais
+// grave logo em seguida (a peça capturada "saindo" do tabuleiro).
+export function somLance(captura = false) {
+  const ctx = obterContexto();
+  if (!ctx) return;
+  const agora = ctx.currentTime;
+  toc(ctx, agora, 340, 0.35);
+  if (captura) toc(ctx, agora + 0.09, 190, 0.45);
+}
+
 export function bipe(vezes = 1, frequencia = 880) {
   const ctx = obterContexto();
   if (!ctx) return;

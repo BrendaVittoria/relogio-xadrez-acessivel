@@ -2,7 +2,7 @@
 // tela de resultado (PGN) e registro do service worker.
 
 import { Chess } from '../vendor/chess.js';
-import { iniciarAnunciador, anunciar, bipe } from './anunciador.js';
+import { iniciarAnunciador, anunciar, bipe, somLance } from './anunciador.js';
 import { preencherListaLances } from './fala.js';
 import { SPECIAL_COMMANDS } from './comandos.js';
 import { Partida } from './jogo.js';
@@ -131,6 +131,7 @@ function aplicarPreferencias(nome) {
   if (prefs.minutos) selecionarTempo(prefs.minutos, prefs.incrementoSegundos);
   $('alarmes').value = prefs.alarmes ?? '30,15,5';
   $('som-avisos').checked = prefs.somAtivado !== false;
+  $('som-pecas').checked = prefs.somPecas !== false;
   anunciar(`Preferências de ${nome.trim()} carregadas.`);
 }
 
@@ -165,6 +166,7 @@ function aoSubmeterSetup(evento) {
     torneio: $('nome-torneio').value.trim(),
     alarmes: alarmes.valores,
     somAtivado: $('som-avisos').checked,
+    somPecas: $('som-pecas').checked,
   };
 
   if (config.arbitro) {
@@ -174,6 +176,7 @@ function aoSubmeterSetup(evento) {
       incrementoSegundos: config.incrementoSegundos,
       alarmes: $('alarmes').value.trim(),
       somAtivado: config.somAtivado,
+      somPecas: config.somPecas,
     });
   }
   registrarUsoTempoPersonalizado(config.minutos, config.incrementoSegundos);
@@ -239,7 +242,7 @@ function iniciarPartida(config, estadoSalvo = null) {
   if (jogoAtual) jogoAtual.destruir();
   pgnExportado = false;
   fimAtual = null;
-  jogoAtual = new Partida({ config, anunciar, bipe, aoFim: aoFimDePartida });
+  jogoAtual = new Partida({ config, anunciar, bipe, somLance, aoFim: aoFimDePartida });
   mostrarTela('tela-jogo');
   pedirWakeLock();
   if (estadoSalvo) {

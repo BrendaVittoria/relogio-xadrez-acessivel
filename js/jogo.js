@@ -25,15 +25,19 @@ export class Partida {
   /**
    * @param {object} deps
    * @param {object} deps.config {modoEntrada, minutos, incrementoSegundos,
-   *   arbitro, brancas, pretas, torneio, alarmes, somAtivado}
+   *   arbitro, brancas, pretas, torneio, alarmes, somAtivado, somPecas}
    * @param {function} deps.anunciar
    * @param {function} deps.bipe
+   * @param {function} deps.somLance (captura) => void
    * @param {function} deps.aoFim  ({resultado, motivo, ...}) => void
    */
-  constructor({ config, anunciar, bipe, aoFim }) {
+  constructor({ config, anunciar, bipe, somLance, aoFim }) {
     this.config = config;
+    // partidas salvas antes da opção existir não têm o campo: som ligado
+    if (this.config.somPecas === undefined) this.config.somPecas = true;
     this.anunciar = anunciar;
     this.bipe = bipe;
+    this.somLance = somLance;
     this.aoFim = aoFim;
 
     this.chess = new Chess();
@@ -85,8 +89,10 @@ export class Partida {
       areaRevisao: document.getElementById('area-revisao'),
       btnRevisao: document.getElementById('btn-revisao'),
       btnModo: document.querySelector('#painel-acoes button[data-acao="modo"]'),
+      btnSomPecas: document.getElementById('btn-som-pecas'),
       tabuleiroDigitacao: document.getElementById('tabuleiro-digitacao'),
     };
+    this._atualizarBotaoSomPecas();
 
     // os tabuleiros mostram a posição em revisão, quando houver
     const obterChess = () => this.chessRevisao || this.chess;
@@ -354,6 +360,7 @@ export class Partida {
       case 'revisao': this.alternarRevisao(); break;
       case 'note': this.registrarNota(arg); break;
       case 'modo': this.alternarModo(); break;
+      case 'som': this.alternarSomPecas(); break;
       case 'hold': this._comandoPausar(); break;
       case 'go': this._comandoRetomar(); break;
       case 'draw': this._encerrar('1/2-1/2', 'acordo'); break;
@@ -770,6 +777,21 @@ export class Partida {
     }
   }
 
+  // Botão "Silenciar peças" do painel de ações: liga/desliga o toque das
+  // peças no meio da partida, sem mexer nos bipes de aviso de tempo.
+  alternarSomPecas() {
+    this.config.somPecas = !this.config.somPecas;
+    this._atualizarBotaoSomPecas();
+    // amostra imediata ao religar, para confirmar que o som voltou
+    if (this.config.somPecas) this.somLance(false);
+    this.anunciar(this.config.somPecas ? 'Som das peças ativado.' : 'Som das peças desativado.');
+    this._salvar();
+  }
+
+  _atualizarBotaoSomPecas() {
+    this._el.btnSomPecas.textContent = this.config.somPecas ? 'Silenciar peças' : 'Som das peças';
+  }
+
   alternarModo() {
     this.correcaoTabuleiro = null; // trocar de modo desiste da correção em curso
     this.modoEntrada = this.modoEntrada === 'text' ? 'board' : 'text';
@@ -855,6 +877,7 @@ export class Partida {
   // `feitoNoTabuleiro`: lance clicado/confirmado direto no tabuleiro — quem
   // fez já sabe o que moveu, então o anúncio completo seria redundante.
   _aposLance(lance, feitoNoTabuleiro = false) {
+    if (this.config.somPecas) this.somLance(Boolean(lance.captured));
     this.fotosLances.push({ ...this.fotoInicioTurno });
     this.relogio.pressionar();
     this.fotoInicioTurno = this.relogio.fotografia();
@@ -878,7 +901,13 @@ export class Partida {
     // anúncio completo permanece (a tela de resultado toma o foco).
     const focouTabuleiro = veioDaDigitacaoDoTabuleiro && !fimDeJogo && this._focarCasaDoLance(lance.to);
     if ((focouTabuleiro || feitoNoTabuleiro) && !fimDeJogo) {
-      if (this.chess.inCheck()) this.anunciar('Xeque.');
+      // o roque não se percebe pelo rótulo da casa de destino ("gustav 1:
+      // rei branco"), então é falado mesmo no tabuleiro, como o xeque
+      const partes = [];
+      if (lance.san.startsWith('O-O-O')) partes.push('Roque grande.');
+      else if (lance.san.startsWith('O-O')) partes.push('Roque pequeno.');
+      if (this.chess.inCheck()) partes.push('Xeque.');
+      if (partes.length) this.anunciar(partes.join(' '));
     } else {
       this.anunciar(anuncio);
     }

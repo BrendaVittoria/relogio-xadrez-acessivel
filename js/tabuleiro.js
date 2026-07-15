@@ -151,8 +151,9 @@ export class TabuleiroAcessivel {
     if (!this.selecionada) {
       if (peca && peca.color === chess.turn()) {
         this.selecionada = casa;
+        // sem anúncio: o rótulo da casa focada já muda para "selecionada, ..."
+        // e o leitor de tela lê a mudança — anunciar por cima falaria demais
         this.atualizar();
-        this.anunciar(`Selecionado: ${PECAS[peca.type].nome} em ${nomeCasa(casa)}. Escolha a casa de destino.`);
       } else if (peca) {
         this.anunciar(`${this._descricaoCasa(casa, peca)}. Não é a vez dessa cor.`);
       } else {
@@ -170,8 +171,8 @@ export class TabuleiroAcessivel {
 
     if (peca && peca.color === chess.turn()) {
       this.selecionada = casa;
+      // troca de seleção também fica só com o rótulo "selecionada, ..."
       this.atualizar();
-      this.anunciar(`Seleção trocada: ${PECAS[peca.type].nome} em ${nomeCasa(casa)}. Escolha a casa de destino.`);
       return;
     }
 

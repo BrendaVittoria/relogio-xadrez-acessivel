@@ -74,13 +74,14 @@
         </fieldset>
 
         <fieldset>
-          <legend>Avisos de tempo</legend>
+          <legend>Sons e avisos de tempo</legend>
           <label for="alarmes">Alarmes de tempo (minutos restantes, separados por vírgula)</label>
           <input type="text" id="alarmes" value="30,15,5" inputmode="numeric"
                  aria-describedby="alarmes-ajuda">
           <p id="alarmes-ajuda" class="ajuda">Exemplo: 30,15,5 avisa quando faltarem 30, 15 e 5 minutos. Deixe vazio para não ter alarmes.</p>
           <p id="alarmes-erro" class="erro" role="alert" hidden></p>
           <label><input type="checkbox" id="som-avisos" checked> Ativar bipes sonoros</label>
+          <label><input type="checkbox" id="som-pecas" checked> Som das peças ao mover (captura soa diferente)</label>
         </fieldset>
 
         <button type="submit" id="btn-iniciar">Iniciar partida</button>
@@ -142,6 +143,7 @@
           <button type="button" data-acao="p">Posição</button>
           <button type="button" data-acao="r">Repetir lance</button>
           <button type="button" data-acao="m">Material</button>
+          <button type="button" data-acao="som" id="btn-som-pecas">Silenciar peças</button>
           <button type="button" data-acao="end">Encerrar partida</button>
           <button type="button" data-acao="?">Ajuda</button>
         </div>

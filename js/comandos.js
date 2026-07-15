@@ -11,6 +11,7 @@ export const SPECIAL_COMMANDS = [
   { cmd: 'revisao', descricao: 'mostra ou esconde os controles de revisão do histórico: lance anterior, próximo lance e ver histórico' },
   { cmd: 'note', descricao: 'registra uma observação do árbitro; o texto vai entre aspas' },
   { cmd: 'modo', descricao: 'alterna entre modo digitação e modo tabuleiro' },
+  { cmd: 'som', descricao: 'liga ou desliga o som das peças ao mover' },
   { cmd: 'hold', descricao: 'pausa os dois relógios' },
   { cmd: 'go', descricao: 'inicia o relógio no começo da partida, e retoma os relógios após uma pausa' },
   { cmd: 'draw', descricao: 'registra empate por acordo e encerra a partida' },
