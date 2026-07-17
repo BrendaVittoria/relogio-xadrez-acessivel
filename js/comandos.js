@@ -6,7 +6,7 @@ export const SPECIAL_COMMANDS = [
   { cmd: 'p', descricao: 'anuncia um resumo da posição atual' },
   { cmd: 'r', descricao: 'repete o último lance anunciado' },
   { cmd: 'm', descricao: 'anuncia o material capturado e a diferença de material' },
-  { cmd: 'back', descricao: 'desfaz o último lance, restaurando tabuleiro e relógio' },
+  { cmd: 'back', descricao: 'desfaz o último lance, restaurando tabuleiro e relógio; atalho: a, de apagar' },
   { cmd: 'corrigir', descricao: 'substitui um lance já registrado, mantendo o resto da partida; exemplo: corrigir 13 brancas Be4. No tabuleiro, navegue pelo histórico com vírgula e ponto e use a forma curta: corrigir Be4' },
   { cmd: 'revisao', descricao: 'mostra ou esconde os controles de revisão do histórico: lance anterior, próximo lance e ver histórico' },
   { cmd: 'note', descricao: 'registra uma observação do árbitro; o texto vai entre aspas' },
@@ -34,6 +34,7 @@ export function identificarComando(entrada) {
 
   if (COMANDOS_SIMPLES.has(minusculo)) return { cmd: minusculo };
   if (minusculo === 'revisão') return { cmd: 'revisao' }; // com acento também vale
+  if (minusculo === 'a') return { cmd: 'back' }; // atalho de "apagar" o último lance
 
   if (/^corrigir\b/i.test(texto)) {
     const completa = texto.match(/^corrigir\s+(\d+)\s+(brancas|pretas)\s+(\S+)\s*$/i);

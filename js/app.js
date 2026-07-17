@@ -58,11 +58,16 @@ function renderizarPresets() {
     radio.type = 'radio';
     radio.name = 'preset-tempo';
     radio.value = `${preset.minutos}+${preset.incrementoSegundos}`;
+    // associação explícita por for/id: o TalkBack não lê o rótulo
+    // implícito (input dentro de label) de forma confiável
+    radio.id = `preset-tempo-${i}`;
+    rotulo.htmlFor = radio.id;
     if (i === 0) radio.checked = true;
     rotulo.appendChild(radio);
-    rotulo.appendChild(document.createTextNode(
-      ` ${rotuloPreset(preset.minutos, preset.incrementoSegundos)}${preset.promovido ? ' (preset seu)' : ''}`,
-    ));
+    const texto = document.createElement('span');
+    texto.textContent =
+      `${rotuloPreset(preset.minutos, preset.incrementoSegundos)}${preset.promovido ? ' (preset seu)' : ''}`;
+    rotulo.appendChild(texto);
     lista.appendChild(rotulo);
   });
 }

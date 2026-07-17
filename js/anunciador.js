@@ -52,13 +52,15 @@ function toc(ctx, inicio, frequencia, volume) {
 }
 
 // Som de lance: um toc para movimento; captura ganha um segundo toc mais
-// grave logo em seguida (a peça capturada "saindo" do tabuleiro).
+// agudo logo em seguida (o "clac" da peça capturada saindo). Precisa ser
+// agudo: alto-falante de celular não reproduz graves (~abaixo de 300 Hz),
+// e com o segundo toc grave captura soava igual a lance comum.
 export function somLance(captura = false) {
   const ctx = obterContexto();
   if (!ctx) return;
   const agora = ctx.currentTime;
   toc(ctx, agora, 340, 0.35);
-  if (captura) toc(ctx, agora + 0.09, 190, 0.45);
+  if (captura) toc(ctx, agora + 0.1, 620, 0.4);
 }
 
 export function bipe(vezes = 1, frequencia = 880) {

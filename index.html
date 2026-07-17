@@ -35,8 +35,8 @@
       <form id="form-setup" novalidate>
         <fieldset>
           <legend>Modo de entrada de lances</legend>
-          <label><input type="radio" name="modo-entrada" value="text"> Digitação</label>
-          <label><input type="radio" name="modo-entrada" value="board" checked> Tabuleiro</label>
+          <label for="opcao-modo-digitacao"><input type="radio" id="opcao-modo-digitacao" name="modo-entrada" value="text"> <span>Digitação</span></label>
+          <label for="opcao-modo-tabuleiro"><input type="radio" id="opcao-modo-tabuleiro" name="modo-entrada" value="board" checked> <span>Tabuleiro</span></label>
         </fieldset>
 
         <fieldset>
@@ -44,7 +44,7 @@
           <div id="lista-presets">
             <!-- presets fixos + promovidos são inseridos via JS -->
           </div>
-          <label><input type="radio" name="preset-tempo" value="custom"> Personalizado</label>
+          <label for="preset-personalizado"><input type="radio" id="preset-personalizado" name="preset-tempo" value="custom"> <span>Personalizado</span></label>
           <div id="campos-personalizado" hidden>
             <label for="tempo-minutos">Minutos por jogador</label>
             <input type="number" id="tempo-minutos" min="1" max="600" inputmode="numeric">
@@ -80,8 +80,8 @@
                  aria-describedby="alarmes-ajuda">
           <p id="alarmes-ajuda" class="ajuda">Exemplo: 30,15,5 avisa quando faltarem 30, 15 e 5 minutos. Deixe vazio para não ter alarmes.</p>
           <p id="alarmes-erro" class="erro" role="alert" hidden></p>
-          <label><input type="checkbox" id="som-avisos" checked> Ativar bipes sonoros</label>
-          <label><input type="checkbox" id="som-pecas" checked> Som das peças ao mover (captura soa diferente)</label>
+          <label for="som-avisos"><input type="checkbox" id="som-avisos" checked> <span>Ativar bipes sonoros</span></label>
+          <label for="som-pecas"><input type="checkbox" id="som-pecas" checked> <span>Som das peças ao mover</span></label>
         </fieldset>
 
         <button type="submit" id="btn-iniciar">Iniciar partida</button>
@@ -238,16 +238,16 @@
     <form id="form-encerrar" method="dialog">
       <fieldset>
         <legend>Resultado</legend>
-        <label><input type="radio" name="resultado-manual" value="1-0" required> Vitória das Brancas (1-0)</label>
-        <label><input type="radio" name="resultado-manual" value="0-1"> Vitória das Pretas (0-1)</label>
-        <label><input type="radio" name="resultado-manual" value="1/2-1/2"> Empate (½-½)</label>
+        <label for="resultado-brancas"><input type="radio" id="resultado-brancas" name="resultado-manual" value="1-0" required> <span>Vitória das Brancas (1-0)</span></label>
+        <label for="resultado-pretas"><input type="radio" id="resultado-pretas" name="resultado-manual" value="0-1"> <span>Vitória das Pretas (0-1)</span></label>
+        <label for="resultado-empate"><input type="radio" id="resultado-empate" name="resultado-manual" value="1/2-1/2"> <span>Empate (½-½)</span></label>
       </fieldset>
       <fieldset>
         <legend>Motivo</legend>
-        <label><input type="radio" name="motivo-manual" value="abandono" checked> Abandono</label>
-        <label><input type="radio" name="motivo-manual" value="acordo"> Acordo</label>
-        <label><input type="radio" name="motivo-manual" value="tempo"> Tempo</label>
-        <label><input type="radio" name="motivo-manual" value="outro"> Outro</label>
+        <label for="motivo-abandono"><input type="radio" id="motivo-abandono" name="motivo-manual" value="abandono" checked> <span>Abandono</span></label>
+        <label for="motivo-acordo"><input type="radio" id="motivo-acordo" name="motivo-manual" value="acordo"> <span>Acordo</span></label>
+        <label for="motivo-tempo"><input type="radio" id="motivo-tempo" name="motivo-manual" value="tempo"> <span>Tempo</span></label>
+        <label for="motivo-outro"><input type="radio" id="motivo-outro" name="motivo-manual" value="outro"> <span>Outro</span></label>
       </fieldset>
       <div class="acoes-linha">
         <button type="submit" value="confirmar">Confirmar encerramento</button>
