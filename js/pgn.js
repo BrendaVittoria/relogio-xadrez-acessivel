@@ -88,16 +88,19 @@ export function baixarPgn(textoPgn, nomeArquivo) {
 }
 
 // Devolve o arquivo que o navegador aceita compartilhar, ou null se nenhum.
-// Tenta .pgn primeiro (Safari/iOS aceita qualquer tipo); o Chrome no Android
-// só compartilha extensões de uma lista fixa que não inclui .pgn, então cai
-// para .txt — o nome mantém ".pgn" no meio para o destinatário saber o que é.
+// No Chrome (Android inclusive), canShare responde que aceita o .pgn, mas o
+// share() rejeita a extensão na hora de abrir — a lista fixa de extensões só
+// é conferida lá, e .pgn não está nela. Por isso o formato é decidido pela
+// família do navegador: Chromium recebe .txt direto (o nome mantém ".pgn" no
+// meio para o destinatário saber o que é); Safari aceita o .pgn de verdade.
 export function arquivoParaCompartilhar(textoPgn, nomeArquivo) {
   if (!navigator.share || !navigator.canShare) return null;
-  const pgn = new File([textoPgn], nomeArquivo, { type: 'application/x-chess-pgn' });
-  if (navigator.canShare({ files: [pgn] })) return pgn;
-  const txt = new File([textoPgn], `${nomeArquivo}.txt`, { type: 'text/plain' });
-  if (navigator.canShare({ files: [txt] })) return txt;
-  return null;
+  const ehChromium = (navigator.userAgentData?.brands || []).some((b) => b.brand.includes('Chromium'))
+    || /Chrome|CriOS|Edg/i.test(navigator.userAgent);
+  const arquivo = ehChromium
+    ? new File([textoPgn], `${nomeArquivo}.txt`, { type: 'text/plain' })
+    : new File([textoPgn], nomeArquivo, { type: 'application/x-chess-pgn' });
+  return navigator.canShare({ files: [arquivo] }) ? arquivo : null;
 }
 
 export async function compartilharPgn(arquivo, titulo) {

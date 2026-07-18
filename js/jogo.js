@@ -364,7 +364,7 @@ export class Partida {
       case 'hold': this._comandoPausar(); break;
       case 'go': this._comandoRetomar(); break;
       case 'draw': this._encerrar('1/2-1/2', 'acordo'); break;
-      case 'resign': this._comandoAbandono(); break;
+      case 'resign': this._comandoAbandono(arg); break;
       case '?': this.anunciar(textoAjuda()); break;
     }
   }
@@ -740,8 +740,14 @@ export class Partida {
     this._salvar();
   }
 
-  _comandoAbandono() {
-    const desistente = this.chess.turn();
+  _comandoAbandono(cor) {
+    if (cor !== 'brancas' && cor !== 'pretas') {
+      // sem o lado indicado, a escolha é feita no diálogo (ver app.js)
+      document.getElementById('dialogo-abandono').showModal();
+      this.anunciar('Abandono: escolha brancas ou pretas.');
+      return;
+    }
+    const desistente = cor === 'brancas' ? 'w' : 'b';
     const resultado = desistente === 'w' ? '0-1' : '1-0';
     this.anunciar(`Abandono das ${nomeCor(desistente)}.`);
     this._encerrar(resultado, 'abandono');

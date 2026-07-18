@@ -15,12 +15,12 @@ export const SPECIAL_COMMANDS = [
   { cmd: 'hold', descricao: 'pausa os dois relógios' },
   { cmd: 'go', descricao: 'inicia o relógio no começo da partida, e retoma os relógios após uma pausa' },
   { cmd: 'draw', descricao: 'registra empate por acordo e encerra a partida' },
-  { cmd: 'resign', descricao: 'registra abandono do lado que tem a vez e encerra a partida' },
+  { cmd: 'resign', descricao: 'registra abandono e encerra a partida; sozinho abre a escolha do lado, ou diga direto: resign brancas' },
   { cmd: '?', descricao: 'lê esta lista de comandos' },
 ];
 
 const COMANDOS_SIMPLES = new Set(
-  SPECIAL_COMMANDS.map((c) => c.cmd).filter((c) => c !== 'note' && c !== 'corrigir'),
+  SPECIAL_COMMANDS.map((c) => c.cmd).filter((c) => c !== 'note' && c !== 'corrigir' && c !== 'resign'),
 );
 
 /**
@@ -51,6 +51,12 @@ export function identificarComando(entrada) {
       cmd: 'corrigir',
       erro: 'Para corrigir, diga o lance certo (corrigir Be4), ou o número, a cor e o lance (corrigir 13 brancas Be4).',
     };
+  }
+
+  if (/^resign\b/i.test(texto)) {
+    const m = texto.match(/^resign\s+(brancas|pretas)\s*$/i);
+    if (m) return { cmd: 'resign', arg: m[1].toLowerCase() };
+    return { cmd: 'resign' }; // sem o lado: abre o diálogo de escolha
   }
 
   if (/^note\b/i.test(texto)) {

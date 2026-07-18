@@ -546,7 +546,7 @@ function ligarEventos() {
       // o comando precisa do lance: pré-preenche a caixa para completar
       jogoAtual.prepararCorrecao();
     } else {
-      jogoAtual.executarComando(acao);
+      jogoAtual.executarComando(acao, botao.dataset.arg);
     }
   });
 
@@ -595,6 +595,16 @@ function ligarEventos() {
     if (jogoAtual) jogoAtual.encerrarManual(resultado.value, motivo);
   });
   $('btn-cancelar-encerrar').addEventListener('click', () => dialogoEncerrar.close('cancelado'));
+
+  // diálogo de abandono: escolha do lado que abandona
+  const dialogoAbandono = $('dialogo-abandono');
+  dialogoAbandono.addEventListener('click', (e) => {
+    const botao = e.target.closest('button[data-abandono]');
+    if (!botao || !jogoAtual) return;
+    dialogoAbandono.close('escolhido');
+    jogoAtual.executarComando('resign', botao.dataset.abandono);
+  });
+  $('btn-cancelar-abandono').addEventListener('click', () => dialogoAbandono.close('cancelado'));
 
   // tela de resultado
   $('btn-baixar-pgn').addEventListener('click', () => {
