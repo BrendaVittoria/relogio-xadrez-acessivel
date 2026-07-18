@@ -27,6 +27,22 @@ export const TEMAS_TABULEIRO = [
     haloPecas: true,
   },
   {
+    id: 'amarelo-marrom',
+    nome: 'Amarelo e marrom escuro',
+    clara: '#ffdf7e',
+    escura: '#5c3a1e',
+    selecao: '#ff2d2d',
+    haloPecas: true, // marrom escuro esconderia as peças pretas sem contorno
+  },
+  {
+    id: 'rosa-branco',
+    nome: 'Rosa e branco',
+    clara: '#ffffff',
+    escura: '#e0559b',
+    selecao: '#2e6cff',
+    haloPecas: false,
+  },
+  {
     id: 'verde',
     nome: 'Verde clássico',
     clara: '#ebecd0',
