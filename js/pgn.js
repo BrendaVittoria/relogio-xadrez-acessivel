@@ -87,16 +87,17 @@ export function baixarPgn(textoPgn, nomeArquivo) {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-export function criarArquivoPgn(textoPgn, nomeArquivo) {
-  return new File([textoPgn], nomeArquivo, { type: 'application/x-chess-pgn' });
-}
-
-export function podeCompartilharArquivo(arquivo) {
-  return Boolean(
-    navigator.share &&
-    navigator.canShare &&
-    navigator.canShare({ files: [arquivo] }),
-  );
+// Devolve o arquivo que o navegador aceita compartilhar, ou null se nenhum.
+// Tenta .pgn primeiro (Safari/iOS aceita qualquer tipo); o Chrome no Android
+// só compartilha extensões de uma lista fixa que não inclui .pgn, então cai
+// para .txt — o nome mantém ".pgn" no meio para o destinatário saber o que é.
+export function arquivoParaCompartilhar(textoPgn, nomeArquivo) {
+  if (!navigator.share || !navigator.canShare) return null;
+  const pgn = new File([textoPgn], nomeArquivo, { type: 'application/x-chess-pgn' });
+  if (navigator.canShare({ files: [pgn] })) return pgn;
+  const txt = new File([textoPgn], `${nomeArquivo}.txt`, { type: 'text/plain' });
+  if (navigator.canShare({ files: [txt] })) return txt;
+  return null;
 }
 
 export async function compartilharPgn(arquivo, titulo) {

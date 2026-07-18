@@ -6,7 +6,7 @@ import { iniciarAnunciador, anunciar, bipe, somLance } from './anunciador.js';
 import { preencherListaLances } from './fala.js';
 import { SPECIAL_COMMANDS } from './comandos.js';
 import { Partida } from './jogo.js';
-import { gerarPgn, nomeArquivoPgn, baixarPgn, criarArquivoPgn, podeCompartilharArquivo, compartilharPgn } from './pgn.js';
+import { gerarPgn, nomeArquivoPgn, baixarPgn, arquivoParaCompartilhar, compartilharPgn } from './pgn.js';
 import {
   PRESETS_FIXOS, presetsPromovidos, registrarUsoTempoPersonalizado,
   lerPreferencias, gravarPreferencias,
@@ -292,11 +292,12 @@ function preencherTelaResultado(fim) {
   const lances = fim.sans.map((san) => replay.move(san));
   preencherListaLances($('historico-final'), lances);
 
-  // Compartilhar só aparece se o navegador suporta compartilhar arquivos
-  const { arquivo } = pgnDaPartida(fim);
-  const suportaCompartilhar = podeCompartilharArquivo(arquivo);
+  // Compartilhar só aparece se o navegador aceita algum dos formatos (.pgn ou .txt)
+  const { texto, nome } = pgnDaPartida(fim);
+  const suportaCompartilhar = arquivoParaCompartilhar(texto, nome) !== null;
   $('btn-compartilhar').hidden = !suportaCompartilhar;
   $('aviso-compartilhar').hidden = suportaCompartilhar;
+  $('btn-copiar-pgn').hidden = !navigator.clipboard;
   $('aviso-pgn-pendente').hidden = false;
 }
 
@@ -309,7 +310,7 @@ function pgnDaPartida(fim) {
     data: new Date(fim.iniciadaEm),
   });
   const nome = nomeArquivoPgn(new Date(fim.iniciadaEm));
-  return { texto, nome, arquivo: criarArquivoPgn(texto, nome) };
+  return { texto, nome };
 }
 
 function marcarPgnExportado() {
@@ -606,7 +607,9 @@ function ligarEventos() {
 
   $('btn-compartilhar').addEventListener('click', async () => {
     if (!fimAtual) return;
-    const { arquivo } = pgnDaPartida(fimAtual);
+    const { texto, nome } = pgnDaPartida(fimAtual);
+    const arquivo = arquivoParaCompartilhar(texto, nome);
+    if (!arquivo) return;
     try {
       await compartilharPgn(arquivo, 'Partida de xadrez (PGN)');
       marcarPgnExportado();
@@ -615,6 +618,17 @@ function ligarEventos() {
       if (erro.name !== 'AbortError') {
         anunciar('Não foi possível compartilhar. Use o botão Baixar PGN.');
       }
+    }
+  });
+
+  $('btn-copiar-pgn').addEventListener('click', async () => {
+    if (!fimAtual) return;
+    const { texto } = pgnDaPartida(fimAtual);
+    try {
+      await navigator.clipboard.writeText(texto);
+      anunciar('PGN copiado para a área de transferência.');
+    } catch {
+      anunciar('Não foi possível copiar. Use o botão Baixar PGN.');
     }
   });
 
