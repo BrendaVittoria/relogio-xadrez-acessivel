@@ -136,7 +136,6 @@
           <button type="button" data-acao="holdgo" id="btn-pausar">Pausar</button>
           <button type="button" data-acao="back">Apagar</button>
           <button type="button" data-acao="corrigir">Corrigir</button>
-          <button type="button" data-acao="revisao" id="btn-revisao">Revisão</button>
           <button type="button" data-acao="draw">Empate</button>
           <button type="button" data-acao="resign">Abandono</button>
           <button type="button" data-acao="t">Tempo</button>
@@ -184,19 +183,18 @@
         <div id="tabuleiro"></div>
       </div>
 
-      <!-- Controles de revisão do histórico: recolhidos atrás do botão
-           Revisão do painel de ações, para o tabuleiro ter o máximo de
-           espaço. No teclado, vírgula/ponto navegam sem precisar abrir. -->
-      <div id="area-revisao" hidden>
-        <div class="acoes-linha">
-          <button type="button" id="btn-lance-anterior">Lance anterior</button>
-          <button type="button" id="btn-lance-proximo">Próximo lance</button>
-          <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
-        </div>
+      <!-- Navegação pelo histórico: sempre à vista, logo abaixo do
+           tabuleiro, com os triângulos de play apontando para o lado do
+           movimento. No teclado, vírgula/ponto fazem o mesmo com o foco
+           numa casa. -->
+      <div id="controles-lance">
+        <button type="button" id="btn-lance-anterior"><span class="simbolo-lance" aria-hidden="true">◀︎</span>Voltar lance</button>
+        <button type="button" id="btn-lance-proximo">Avançar lance<span class="simbolo-lance" aria-hidden="true">▶︎</span></button>
+        <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
       </div>
 
       <!-- Histórico fora dos blocos de modo: sempre à vista na digitação;
-           no modo tabuleiro aparece pelo Ver histórico da revisão -->
+           no modo tabuleiro aparece pelo botão Ver histórico -->
       <div id="area-historico">
         <h3 id="titulo-historico">Histórico de lances</h3>
         <ol id="historico" aria-labelledby="titulo-historico"></ol>

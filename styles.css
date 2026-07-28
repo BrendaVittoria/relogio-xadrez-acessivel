@@ -255,6 +255,33 @@ select {
   margin-top: 0.25rem;
 }
 
+/* ---------------- Navegação pelo histórico ---------------- */
+
+/* Sempre à vista, logo abaixo do tabuleiro: dois alvos largos, lado a lado,
+   com o triângulo de play apontando para o lado do movimento. */
+#controles-lance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+
+/* dois ids para vencer a regra de botões pequenos do celular, que zera
+   margens só dela mesma */
+#tela-jogo #controles-lance button {
+  flex: 1 1 8rem;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+/* o Ver histórico não disputa a linha com os dois de navegação */
+#tela-jogo #controles-lance #btn-ver-historico { flex-basis: 100%; }
+
+.simbolo-lance { font-size: 1.4em; line-height: 1; }
+
 /* ---------------- Painel de ações ---------------- */
 
 .acoes-grade {
@@ -352,13 +379,12 @@ section { margin-top: 1rem; }
 
   /* O tabuleiro ocupa a largura toda e também é limitado pela ALTURA que
      sobra na tela: 100svh (altura com a barra de endereço visível — o pior
-     caso) menos o espaço dos relógios, botões e caixa de lances (~16rem,
-     já contando indicador de pausa e "na vez"; os controles de revisão
-     ficam recolhidos e não entram na conta — abertos, a página rola um
-     pouco, sem redimensionar nada). O piso de 13rem garante casas tocáveis
+     caso) menos o espaço dos relógios, botões e caixa de lances (~18.5rem,
+     já contando indicador de pausa, "na vez" e a linha fixa de Voltar e
+     Avançar lance logo abaixo do tabuleiro). O piso de 13rem garante casas tocáveis
      mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
      tabuleiro continua inteiro e estável. */
   .tab-grade {
-    width: max(min(100%, 30rem, calc(100svh - 16rem)), 13rem);
+    width: max(min(100%, 30rem, calc(100svh - 18.5rem)), 13rem);
   }
 }
