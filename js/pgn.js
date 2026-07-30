@@ -69,10 +69,35 @@ export function gerarPgn({ config, sans, notas, resultado, data }) {
   return `${cabecalho}\n\n${linhas.join('\n')}\n`;
 }
 
-export function nomeArquivoPgn(data) {
+// Nome de jogador virando pedaço de nome de arquivo: sem os caracteres que o
+// Windows e o Android recusam, sem espaços (viram hífen) e com tamanho limitado.
+function nomeParaArquivo(valor) {
+  return (valor || '')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40);
+}
+
+/**
+ * Se os nomes dos jogadores foram preenchidos, o arquivo sai como
+ * "Marcelo-versus-Jarbas-2026-07-30-1432.pgn". Com só um nome, vale esse nome
+ * sozinho; sem nenhum, continua "partida-...".
+ * @param {Date|string|number} data
+ * @param {{brancas?:string, pretas?:string}} [config]
+ */
+export function nomeArquivoPgn(data, config = {}) {
   const d = data instanceof Date ? data : new Date(data);
   const p = (n) => String(n).padStart(2, '0');
-  return `partida-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.pgn`;
+  const carimbo = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+
+  const brancas = nomeParaArquivo(config.brancas);
+  const pretas = nomeParaArquivo(config.pretas);
+  let base = 'partida';
+  if (brancas && pretas) base = `${brancas}-versus-${pretas}`;
+  else if (brancas || pretas) base = brancas || pretas;
+
+  return `${base}-${carimbo}.pgn`;
 }
 
 export function baixarPgn(textoPgn, nomeArquivo) {

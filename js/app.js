@@ -309,7 +309,7 @@ function pgnDaPartida(fim) {
     resultado: fim.resultado,
     data: new Date(fim.iniciadaEm),
   });
-  const nome = nomeArquivoPgn(new Date(fim.iniciadaEm));
+  const nome = nomeArquivoPgn(new Date(fim.iniciadaEm), fim.config);
   return { texto, nome };
 }
 
