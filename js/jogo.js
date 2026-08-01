@@ -807,10 +807,59 @@ export class Partida {
   }
 
   _aoCairBandeira(cor) {
-    const resultado = cor === 'w' ? '0-1' : '1-0';
+    const adversario = cor === 'w' ? 'b' : 'w';
     this.anunciar(`Tempo esgotado das ${nomeCor(cor)}.`);
     if (this.config.somAtivado) this.bipe(3, 660);
-    this._encerrar(resultado, 'tempo');
+    // FIDE 6.9: quem estoura o tempo perde, mas a partida é empate se o
+    // adversário não puder dar mate por nenhuma sequência legal de lances.
+    if (this._naoPodeDarMate(adversario)) {
+      this.anunciar(`Empate: ${nomeCor(adversario)} sem material para dar mate.`);
+      this._encerrar('1/2-1/2', 'tempo com material insuficiente');
+      return;
+    }
+    this._encerrar(cor === 'w' ? '0-1' : '1-0', 'tempo');
+  }
+
+  /**
+   * A cor consegue dar mate a partir daqui, mesmo contando com a pior defesa
+   * possível do outro lado (mate ajudado)? Critério da regra 6.9 da FIDE —
+   * é mais amplo que "material insuficiente" do chess.js, que só olha
+   * posições mortas para os dois lados.
+   * @param {'w'|'b'} cor lado que ainda tem tempo no relógio
+   */
+  _naoPodeDarMate(cor) {
+    const adversario = cor === 'w' ? 'b' : 'w';
+    const pecas = { w: [], b: [] };
+    for (const linha of this.chess.board()) {
+      for (const casa of linha) if (casa) pecas[casa.color].push(casa);
+    }
+    const temTipo = (c, tipos) => pecas[c].some((p) => tipos.includes(p.type));
+    const so = (c, tipos) => pecas[c].every((p) => tipos.includes(p.type));
+
+    // rei sozinho
+    if (pecas[cor].length === 1) return true;
+
+    // rei e um cavalo: só dá mate se o adversário tiver alguma peça capaz de
+    // bloquear o próprio rei numa quina. Dama não serve: qualquer casa de onde
+    // o cavalo daria o mate fica ao alcance dela.
+    if (pecas[cor].length === 2 && temTipo(cor, ['n']) && so(adversario, ['k', 'q'])) {
+      return true;
+    }
+
+    // rei e bispos de uma cor de casa só: nunca alcançam o rei adversário na
+    // cor oposta, então só dá mate se houver bispo adversário da outra cor
+    // (para ser capturado/bloquear) ou cavalo/peão do adversário bloqueando.
+    if (so(cor, ['k', 'b']) && temTipo(cor, ['b'])) {
+      const coresDeCasa = new Set();
+      for (const c of ['w', 'b']) {
+        for (const p of pecas[c]) {
+          if (p.type === 'b') coresDeCasa.add(this.chess.squareColor(p.square));
+        }
+      }
+      if (coresDeCasa.size === 1 && !temTipo(adversario, ['n', 'p'])) return true;
+    }
+
+    return false;
   }
 
   _aoAlarme(cor, minutos) {
