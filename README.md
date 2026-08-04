@@ -21,17 +21,6 @@ python -m http.server 8765
 e abra `http://localhost:8765`. (Abrir o `index.html` direto do disco não
 funciona: módulos ES e service worker exigem HTTP.)
 
-## Como publicar
-
-É um site 100% estático — GitHub Pages resolve: basta publicar a pasta
-inteira. O `manifest.webmanifest` e o `sw.js` usam caminhos relativos, então
-funciona também em subdiretório (`usuario.github.io/relogio/`).
-
-> O service worker usa *stale-while-revalidate*: cada visita serve o cache e
-> renova em segundo plano, então **atualizações aparecem na recarga seguinte
-> sem mexer em versão**. O nome do cache em `sw.js` só precisa mudar se um
-> dia for necessário forçar uma reinstalação completa.
-
 ## Estrutura
 
 | Arquivo | Papel |
@@ -56,13 +45,3 @@ durante a partida (silenciosamente ignorada onde não há suporte).
 | `icons/pecas/*.svg` | Peças SVG (conjunto Cburnett, de Colin M. L. Burnett, via Wikimedia Commons, licença CC BY-SA 3.0 / GFDL) |
 | `sw.js` | Service worker: cache do app shell para uso offline |
 
-## O que ainda não foi verificado (checklist da espec, seção 8)
-
-Testado em desktop (Chromium). Falta validar em dispositivos reais:
-
-- [ ] Instalar ("Adicionar à tela inicial") no Android/Chrome, iOS/Safari e desktop.
-- [ ] Modo avião depois da primeira visita (offline).
-- [ ] `navigator.share` com arquivo PGN real no Android (WhatsApp/e-mail) e iOS.
-- [ ] Checklist completo de acessibilidade com NVDA, VoiceOver e TalkBack.
-- [ ] Wake Lock num celular real (aqui o ambiente de teste roda "invisível",
-      então a aquisição não pôde ser observada — só o pedido e o fallback).

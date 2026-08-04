@@ -3,7 +3,9 @@
 
 import { Chess } from '../vendor/chess.js';
 import { iniciarAnunciador, anunciar, bipe, somLance } from './anunciador.js';
-import { preencherListaLances } from './fala.js';
+import {
+  preencherListaLances, descreverPosicaoBlocos, nomeFormatoDescricao,
+} from './fala.js';
 import { SPECIAL_COMMANDS } from './comandos.js';
 import { Partida } from './jogo.js';
 import { gerarPgn, nomeArquivoPgn, baixarPgn, arquivoParaCompartilhar, compartilharPgn } from './pgn.js';
@@ -11,6 +13,7 @@ import {
   PRESETS_FIXOS, presetsPromovidos, registrarUsoTempoPersonalizado,
   lerPreferencias, gravarPreferencias,
   lerTemaTabuleiro, gravarTemaTabuleiro,
+  lerFormatoDescricao, gravarFormatoDescricao,
   lerPartidaAtual, limparPartidaAtual,
   lerHistorico, adicionarAoHistorico, removerDoHistorico, limparHistorico,
   exportarDados, importarDados,
@@ -210,6 +213,53 @@ function trocarTema(id) {
   anunciar(`Cores do tabuleiro: ${tema.nome}.`);
 }
 
+// ---------------- descrição da posição (diálogo) ----------------
+
+// FEN da posição que está no diálogo: guardar o texto, e não o objeto do
+// jogo, deixa a descrição estável enquanto o diálogo estiver aberto.
+let fenDescrito = null;
+let formatoDescricao = 'pecas';
+
+// Chamado pelo comando p e pelo botão "Descrever posição" do painel de ações.
+function abrirDescricaoPosicao(chess, titulo) {
+  fenDescrito = chess.fen();
+  $('titulo-descrever').textContent = titulo;
+  renderDescricao();
+  $('dialogo-descrever').showModal();
+  // Foco no título: o conteúdo do diálogo é para ler, então a leitura começa
+  // no começo dele, e não no botão do fim.
+  $('titulo-descrever').focus();
+}
+
+function renderDescricao() {
+  if (!fenDescrito) return;
+  const blocos = descreverPosicaoBlocos(new Chess(fenDescrito), formatoDescricao);
+  const cont = $('blocos-descricao');
+  cont.textContent = '';
+  for (const bloco of blocos) {
+    const p = document.createElement('p');
+    p.textContent = bloco;
+    cont.appendChild(p);
+  }
+  // O botão diz para onde ele leva, não onde se está: é o rótulo que funciona
+  // sem ver o resto da tela.
+  $('btn-formato-descricao').textContent =
+    `Mudar para descrição ${nomeFormatoDescricao(outroFormatoDescricao())}`;
+}
+
+function outroFormatoDescricao() {
+  return formatoDescricao === 'fen' ? 'pecas' : 'fen';
+}
+
+function alternarFormatoDescricao() {
+  formatoDescricao = outroFormatoDescricao();
+  gravarFormatoDescricao(formatoDescricao);
+  renderDescricao();
+  // Volta ao começo da descrição: o texto todo mudou, e reler do início é o
+  // motivo de ter trocado de formato.
+  $('titulo-descrever').focus();
+}
+
 // ---------------- wake lock: tela acesa durante a partida ----------------
 
 let wakeLock = null;
@@ -247,7 +297,11 @@ function iniciarPartida(config, estadoSalvo = null) {
   if (jogoAtual) jogoAtual.destruir();
   pgnExportado = false;
   fimAtual = null;
-  jogoAtual = new Partida({ config, anunciar, bipe, somLance, aoFim: aoFimDePartida });
+  jogoAtual = new Partida({
+    config, anunciar, bipe, somLance,
+    aoFim: aoFimDePartida,
+    aoDescreverPosicao: abrirDescricaoPosicao,
+  });
   mostrarTela('tela-jogo');
   pedirWakeLock();
   if (estadoSalvo) {
@@ -596,6 +650,10 @@ function ligarEventos() {
   });
   $('btn-cancelar-encerrar').addEventListener('click', () => dialogoEncerrar.close('cancelado'));
 
+  // diálogo da descrição da posição
+  $('btn-formato-descricao').addEventListener('click', alternarFormatoDescricao);
+  $('btn-fechar-descrever').addEventListener('click', () => $('dialogo-descrever').close());
+
   // diálogo de abandono: escolha do lado que abandona
   const dialogoAbandono = $('dialogo-abandono');
   dialogoAbandono.addEventListener('click', (e) => {
@@ -669,6 +727,7 @@ function ligarEventos() {
 function iniciarApp() {
   iniciarAnunciador($('anunciador'));
   iniciarTemas();
+  formatoDescricao = lerFormatoDescricao();
   renderizarPresets();
   renderizarHistorico();
   atualizarCamposPersonalizado();

@@ -10,7 +10,7 @@ import { identificarComando, textoAjuda } from './comandos.js';
 import {
   anunciarLanceAplicado, descreverLance, descreverLanceFalado, sufixoXeque,
   nomeCasa, nomeCor, nomePeca, preencherListaLances,
-  tempoFalado, tempoVisual, PECAS, VALOR_PECAS,
+  tempoFalado, tempoVisual, VALOR_PECAS,
 } from './fala.js';
 import { gravarPartidaAtual } from './armazenamento.js';
 
@@ -30,8 +30,9 @@ export class Partida {
    * @param {function} deps.bipe
    * @param {function} deps.somLance (captura) => void
    * @param {function} deps.aoFim  ({resultado, motivo, ...}) => void
+   * @param {function} deps.aoDescreverPosicao (chess, titulo) => void
    */
-  constructor({ config, anunciar, bipe, somLance, aoFim }) {
+  constructor({ config, anunciar, bipe, somLance, aoFim, aoDescreverPosicao }) {
     this.config = config;
     // partidas salvas antes da opção existir não têm o campo: som ligado
     if (this.config.somPecas === undefined) this.config.somPecas = true;
@@ -39,6 +40,7 @@ export class Partida {
     this.bipe = bipe;
     this.somLance = somLance;
     this.aoFim = aoFim;
+    this.aoDescreverPosicao = aoDescreverPosicao;
 
     this.chess = new Chess();
     this.notas = [];
@@ -373,35 +375,13 @@ export class Partida {
     );
   }
 
+  // A posição vai para um diálogo em blocos, como no leitor de PGN: em vez de
+  // um anúncio único e comprido, quem lê percorre frase a frase no seu ritmo.
   _comandoPosicao() {
     // durante a revisão do histórico, descreve a posição que está na tela
     const chess = this.chessRevisao || this.chess;
-    const linhas = chess.board();
-    const porCor = { w: new Map(), b: new Map() };
-    for (const linha of linhas) {
-      for (const casa of linha) {
-        if (!casa) continue;
-        const mapa = porCor[casa.color];
-        if (!mapa.has(casa.type)) mapa.set(casa.type, []);
-        mapa.get(casa.type).push(casa.square);
-      }
-    }
-    const ordem = ['k', 'q', 'r', 'b', 'n', 'p'];
-    const plural = { k: 'reis', q: 'damas', r: 'torres', b: 'bispos', n: 'cavalos', p: 'peões' };
-    const descreverCor = (cor) => {
-      const partes = [];
-      for (const tipo of ordem) {
-        const casas = porCor[cor].get(tipo);
-        if (!casas) continue;
-        const nomes = casas.map(nomeCasa).join(', ');
-        partes.push(`${casas.length > 1 ? plural[tipo] : PECAS[tipo].nome} em ${nomes}`);
-      }
-      return partes.join('; ');
-    };
     const titulo = this.posicaoRevisao !== null ? 'Posição navegada' : 'Posição atual';
-    this.anunciar(
-      `${titulo}. Brancas: ${descreverCor('w')}. Pretas: ${descreverCor('b')}. Vez das ${nomeCor(chess.turn())}.`,
-    );
+    this.aoDescreverPosicao(chess, titulo);
   }
 
   _comandoRepetir() {

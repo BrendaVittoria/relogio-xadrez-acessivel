@@ -333,6 +333,12 @@ dialog {
 }
 dialog::backdrop { background: rgba(0, 0, 0, 0.6); }
 
+/* A descrição é o diálogo mais comprido: sem uma largura própria ele encosta
+   nas bordas da tela do celular. Com isso, sobra uma margem dos dois lados e
+   no computador ele continua no teto de 28rem. */
+#dialogo-descrever { width: calc(100% - 2rem); }
+#blocos-descricao p { margin: 0.4rem 0; }
+
 /* ---------------- Telas ---------------- */
 
 section { margin-top: 1rem; }

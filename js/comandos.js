@@ -3,7 +3,7 @@
 
 export const SPECIAL_COMMANDS = [
   { cmd: 't', descricao: 'anuncia o tempo restante de cada jogador' },
-  { cmd: 'p', descricao: 'anuncia um resumo da posição atual' },
+  { cmd: 'p', descricao: 'abre o diálogo com a descrição da posição, linha a linha, com um botão para trocar entre descrição por peça e por fileira' },
   { cmd: 'r', descricao: 'repete o último lance anunciado' },
   { cmd: 'm', descricao: 'anuncia o material capturado e a diferença de material' },
   { cmd: 'back', descricao: 'desfaz o último lance, restaurando tabuleiro e relógio; atalho: a, de apagar' },

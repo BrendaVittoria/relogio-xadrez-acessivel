@@ -46,6 +46,7 @@ export function gravarPreferencias(nomeArbitro, prefs) {
 
 export const PRESETS_FIXOS = [
   { minutos: 30, incrementoSegundos: 15 },
+  { minutos: 45, incrementoSegundos: 15 },
   { minutos: 45, incrementoSegundos: 30 },
   { minutos: 60, incrementoSegundos: 30 },
 ];
@@ -89,6 +90,18 @@ export function lerTemaTabuleiro() {
 
 export function gravarTemaTabuleiro(id) {
   gravar('tema-tabuleiro', id);
+}
+
+// ---------------- Formato da descrição de posição ----------------
+
+// Vale para o aparelho, como o tema: é uma escolha de como se prefere ouvir
+// a posição, e não uma configuração da partida.
+export function lerFormatoDescricao() {
+  return ler('formato-descricao') === 'fen' ? 'fen' : 'pecas';
+}
+
+export function gravarFormatoDescricao(id) {
+  gravar('formato-descricao', id);
 }
 
 // ---------------- Partida em andamento (recuperação) ----------------
