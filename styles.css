@@ -183,13 +183,51 @@ button:hover { border-color: var(--foco); }
    disponível e por um teto para não ficar gigante no desktop. A unidade é
    a estática (vmin, não dvmin): a dinâmica muda quando a barra de endereço
    do celular some na rolagem, redimensionando o tabuleiro no meio dela. */
+.tab-quadro {
+  display: grid;
+  grid-template-columns: auto 1fr; /* números | tabuleiro */
+  grid-template-rows: auto auto;   /* tabuleiro / letras */
+  width: min(100%, 88vmin, 30rem);
+}
+
 .tab-grade {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  width: min(100%, 88vmin, 30rem);
   border: 3px solid var(--borda);
   box-sizing: border-box;
 }
+
+/* Coordenadas decorativas: as faixas repetem a borda do tabuleiro em
+   transparente para que cada rótulo caia exatamente na frente da sua casa. */
+.tab-fileiras, .tab-colunas {
+  display: grid;
+  border: 3px solid transparent;
+  box-sizing: border-box;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+  line-height: 1;
+  user-select: none;
+}
+.tab-fileiras {
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-rows: repeat(8, 1fr);
+  padding-right: 0.3rem;
+}
+.tab-fileiras span {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.tab-colunas {
+  grid-column: 2;
+  grid-row: 2;
+  grid-template-columns: repeat(8, 1fr);
+  padding-top: 0.25rem;
+}
+.tab-colunas span { text-align: center; }
 
 /* Cada casa se faz quadrada sozinha (altura = padding de 100% da própria
    largura) — não depende de aspect-ratio nem de altura herdada da grade,
@@ -387,10 +425,12 @@ section { margin-top: 1rem; }
      sobra na tela: 100svh (altura com a barra de endereço visível — o pior
      caso) menos o espaço dos relógios, botões e caixa de lances (~18.5rem,
      já contando indicador de pausa, "na vez" e a linha fixa de Voltar e
-     Avançar lance logo abaixo do tabuleiro). O piso de 13rem garante casas tocáveis
+     Avançar lance logo abaixo do tabuleiro, mais a linha de letras das
+     colunas). O piso de 13rem garante casas tocáveis
      mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
      tabuleiro continua inteiro e estável. */
-  .tab-grade {
-    width: max(min(100%, 30rem, calc(100svh - 18.5rem)), 13rem);
+  .tab-quadro {
+    width: max(min(100%, 30rem, calc(100svh - 19.5rem)), 13rem);
   }
+  .tab-fileiras, .tab-colunas { font-size: 0.7rem; }
 }
