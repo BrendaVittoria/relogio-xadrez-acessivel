@@ -33,7 +33,7 @@ funciona: módulos ES e service worker exigem HTTP.)
 | `js/relogio.js` | Relógio Fischer com alarmes, pausa e snapshots para `back` |
 | `js/tabuleiro.js` | Tabuleiro acessível (setas, Enter, Esc, casas foneticamente nomeadas) |
 | `js/fala.js` | Lances e casas em português falado (anna/bella/cesar/…) |
-| `js/anunciador.js` | Região `aria-live` única + bipes (Web Audio) |
+| `js/anunciador.js` | Região `aria-live` única + sons de `sounds/` e bipes de reserva (Web Audio) |
 | `js/pgn.js` | Geração do PGN, download e Web Share |
 | `js/armazenamento.js` | localStorage: preferências, presets promovidos, tema, recuperação, backup |
 | `js/temas.js` | Temas de cores do tabuleiro (inclui alto contraste para baixa visão) |

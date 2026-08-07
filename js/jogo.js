@@ -29,16 +29,25 @@ export class Partida {
    * @param {function} deps.anunciar
    * @param {function} deps.bipe
    * @param {function} deps.somLance (captura) => void
+   * @param {function} deps.somXequeMate () => void
+   * @param {function} deps.somEmpate () => void
+   * @param {function} deps.somAvisoTempo () => boolean  false = amostra ausente
    * @param {function} deps.aoFim  ({resultado, motivo, ...}) => void
    * @param {function} deps.aoDescreverPosicao (chess, titulo) => void
    */
-  constructor({ config, anunciar, bipe, somLance, aoFim, aoDescreverPosicao }) {
+  constructor({
+    config, anunciar, bipe, somLance, somXequeMate, somEmpate, somAvisoTempo,
+    aoFim, aoDescreverPosicao,
+  }) {
     this.config = config;
     // partidas salvas antes da opção existir não têm o campo: som ligado
     if (this.config.somPecas === undefined) this.config.somPecas = true;
     this.anunciar = anunciar;
     this.bipe = bipe;
     this.somLance = somLance;
+    this.somXequeMate = somXequeMate;
+    this.somEmpate = somEmpate;
+    this.somAvisoTempo = somAvisoTempo;
     this.aoFim = aoFim;
     this.aoDescreverPosicao = aoDescreverPosicao;
 
@@ -844,7 +853,8 @@ export class Partida {
 
   _aoAlarme(cor, minutos) {
     this.anunciar(`Atenção: ${nomeCor(cor)} com ${minutos} ${minutos === 1 ? 'minuto restante' : 'minutos restantes'}.`);
-    if (this.config.somAtivado) this.bipe(2);
+    // amostra de aviso de tempo; sem ela, o bipe sintetizado de sempre
+    if (this.config.somAtivado && !this.somAvisoTempo()) this.bipe(2);
   }
 
   _verificarFimAutomatico(lance) {
@@ -864,6 +874,14 @@ export class Partida {
     if (this.finalizada) return;
     this.finalizada = true;
     this.relogio.parar();
+    // Som do desfecho, junto com o anúncio: mate só no mate mesmo (abandono e
+    // queda de bandeira também dão 1-0, mas não são mate); empate em qualquer
+    // empate, combinado ou automático. Segue a opção de sons de aviso, não a
+    // de sons das peças — é um aviso de fim de partida.
+    if (this.config.somAtivado) {
+      if (motivo === 'xeque-mate') this.somXequeMate();
+      else if (resultado === '1/2-1/2') this.somEmpate();
+    }
     this.resultado = resultado;
     this.motivo = motivo;
     this.encerradaEm = Date.now();

@@ -2,7 +2,10 @@
 // tela de resultado (PGN) e registro do service worker.
 
 import { Chess } from '../vendor/chess.js';
-import { iniciarAnunciador, anunciar, bipe, somLance } from './anunciador.js';
+import {
+  iniciarAnunciador, anunciar, bipe, somLance, precarregarSons,
+  somXequeMate, somEmpate, somAvisoTempo,
+} from './anunciador.js';
 import {
   preencherListaLances, descreverPosicaoBlocos, nomeFormatoDescricao,
 } from './fala.js';
@@ -298,7 +301,7 @@ function iniciarPartida(config, estadoSalvo = null) {
   pgnExportado = false;
   fimAtual = null;
   jogoAtual = new Partida({
-    config, anunciar, bipe, somLance,
+    config, anunciar, bipe, somLance, somXequeMate, somEmpate, somAvisoTempo,
     aoFim: aoFimDePartida,
     aoDescreverPosicao: abrirDescricaoPosicao,
   });
@@ -733,6 +736,13 @@ function iniciarApp() {
   atualizarCamposPersonalizado();
   ligarEventos();
   verificarRecuperacao();
+
+  // O navegador só libera áudio depois de um gesto do usuário; o primeiro
+  // toque/tecla também é a deixa para baixar e decodificar as amostras, bem
+  // antes do primeiro lance.
+  const prepararAudio = () => precarregarSons();
+  document.addEventListener('pointerdown', prepararAudio, { once: true });
+  document.addEventListener('keydown', prepararAudio, { once: true });
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(() => {
