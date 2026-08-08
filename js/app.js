@@ -53,6 +53,10 @@ function rotuloPreset(minutos, incrementoSegundos) {
 
 function renderizarPresets() {
   const lista = $('lista-presets');
+  // A escolha atual tem que sobreviver ao redesenho: um rádio recém-inserido
+  // com checked rouba a marcação do grupo, e quem tinha escolhido
+  // "Personalizado" voltava ao primeiro preset a cada volta à sala de espera.
+  const escolhido = presetSelecionado();
   lista.textContent = '';
   const todos = [
     ...PRESETS_FIXOS.map((p) => ({ ...p, promovido: false })),
@@ -68,7 +72,7 @@ function renderizarPresets() {
     // implícito (input dentro de label) de forma confiável
     radio.id = `preset-tempo-${i}`;
     rotulo.htmlFor = radio.id;
-    if (i === 0) radio.checked = true;
+    if (radio.value === escolhido) radio.checked = true;
     rotulo.appendChild(radio);
     const texto = document.createElement('span');
     texto.textContent =
@@ -76,6 +80,12 @@ function renderizarPresets() {
     rotulo.appendChild(texto);
     lista.appendChild(rotulo);
   });
+  // primeira carga, ou preset promovido que saiu da lista: cai no primeiro
+  if (!presetSelecionado()) {
+    const primeiro = lista.querySelector('input[name="preset-tempo"]');
+    if (primeiro) primeiro.checked = true;
+  }
+  atualizarCamposPersonalizado();
 }
 
 function presetSelecionado() {
@@ -146,6 +156,16 @@ function aplicarPreferencias(nome) {
   anunciar(`Preferências de ${nome.trim()} carregadas.`);
 }
 
+// A partida seguinte é de outras pessoas e de outra rodada: esses campos
+// saem para não irem parar no PGN errado. Árbitro e torneio ficam, porque
+// valem para o dia inteiro.
+function limparIdentificacaoDaPartida() {
+  $('nome-brancas').value = '';
+  $('nome-pretas').value = '';
+  $('rodada').value = '';
+  $('mesa').value = '';
+}
+
 function aoSubmeterSetup(evento) {
   evento.preventDefault();
   const erroAlarmes = $('alarmes-erro');
@@ -175,6 +195,8 @@ function aoSubmeterSetup(evento) {
     brancas: $('nome-brancas').value.trim(),
     pretas: $('nome-pretas').value.trim(),
     torneio: $('nome-torneio').value.trim(),
+    rodada: $('rodada').value.trim(),
+    mesa: $('mesa').value.trim(),
     alarmes: alarmes.valores,
     somAtivado: $('som-avisos').checked,
     somPecas: $('som-pecas').checked,
@@ -338,11 +360,25 @@ function duracaoFalada(ms) {
   return 'menos de um minuto';
 }
 
+// Torneio, rodada e mesa em uma linha só; vazio quando nenhum dos três foi
+// preenchido, para a tela não ganhar um parágrafo sem conteúdo.
+function identificacaoDaPartida(config = {}) {
+  const partes = [];
+  if (config.torneio) partes.push(`Torneio: ${config.torneio}`);
+  if (config.rodada) partes.push(`Rodada: ${config.rodada}`);
+  if (config.mesa) partes.push(`Mesa: ${config.mesa}`);
+  return partes.join(' — ');
+}
+
 function preencherTelaResultado(fim) {
   $('resultado-texto').textContent =
     `Resultado: ${fim.resultado.replace('1/2-1/2', '½-½')} — ${NOME_RESULTADO[fim.resultado]}, por ${fim.motivo}.`;
   $('resultado-duracao').textContent =
     `Duração da partida: ${duracaoFalada((fim.encerradaEm || Date.now()) - fim.iniciadaEm)}. ${fim.sans.length} ${fim.sans.length === 1 ? 'lance' : 'lances'}.`;
+
+  const identificacao = $('resultado-identificacao');
+  identificacao.textContent = identificacaoDaPartida(fim.config);
+  identificacao.hidden = !identificacao.textContent;
 
   // mesmo formato fonético do histórico da tela de jogo
   const replay = new Chess();
@@ -386,7 +422,11 @@ function descricaoDePartida(partida) {
   const pretas = partida.config.pretas || '?';
   const resultado = partida.resultado.replace('1/2-1/2', '½-½');
   const lances = partida.sans.length;
-  return `${quando} — ${brancas} contra ${pretas} — ${resultado}, por ${partida.motivo}, ${lances} ${lances === 1 ? 'lance' : 'lances'}`;
+  const onde = [];
+  if (partida.config.rodada) onde.push(`rodada ${partida.config.rodada}`);
+  if (partida.config.mesa) onde.push(`mesa ${partida.config.mesa}`);
+  const lugar = onde.length ? ` — ${onde.join(', ')}` : '';
+  return `${quando}${lugar} — ${brancas} contra ${pretas} — ${resultado}, por ${partida.motivo}, ${lances} ${lances === 1 ? 'lance' : 'lances'}`;
 }
 
 function renderizarHistorico() {
@@ -711,6 +751,7 @@ function ligarEventos() {
       jogoAtual = null;
     }
     fimAtual = null;
+    limparIdentificacaoDaPartida();
     renderizarPresets();
     renderizarHistorico();
     mostrarTela('tela-setup');

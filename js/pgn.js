@@ -11,7 +11,7 @@ function tagOuInterrogacao(valor) {
 
 /**
  * @param {object} dados
- * @param {object} dados.config  {torneio, brancas, pretas, arbitro, minutos, incrementoSegundos}
+ * @param {object} dados.config  {torneio, rodada, mesa, brancas, pretas, arbitro, minutos, incrementoSegundos}
  * @param {string[]} dados.sans  lances em SAN, na ordem
  * @param {Array<{indiceLance:number, texto:string}>} dados.notas  indiceLance = índice do meio-lance (0 = antes do 1º lance)
  * @param {string} dados.resultado '1-0' | '0-1' | '1/2-1/2'
@@ -22,17 +22,23 @@ export function gerarPgn({ config, sans, notas, resultado, data }) {
   const dataPgn = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const timeControl = `${config.minutos * 60}+${config.incrementoSegundos}`;
 
-  const cabecalho = [
+  // As sete primeiras são obrigatórias e nessa ordem (Seven Tag Roster); as
+  // demais são suplementares e entram depois. Board só sai quando a mesa foi
+  // informada: fora de competição por equipes ela não existe, e um "?" fixo
+  // seria só ruído no arquivo.
+  const tags = [
     `[Event "${tagOuInterrogacao(config.torneio)}"]`,
     `[Site "?"]`,
     `[Date "${dataPgn}"]`,
-    `[Round "?"]`,
+    `[Round "${tagOuInterrogacao(config.rodada)}"]`,
     `[White "${tagOuInterrogacao(config.brancas)}"]`,
     `[Black "${tagOuInterrogacao(config.pretas)}"]`,
     `[Result "${resultado}"]`,
     `[TimeControl "${timeControl}"]`,
     `[Arbiter "${tagOuInterrogacao(config.arbitro)}"]`,
-  ].join('\n');
+  ];
+  if ((config.mesa || '').trim()) tags.push(`[Board "${escaparTag(config.mesa.trim())}"]`);
+  const cabecalho = tags.join('\n');
 
   // Notas agrupadas por meio-lance (podem existir várias no mesmo lance).
   const notasPorLance = new Map();

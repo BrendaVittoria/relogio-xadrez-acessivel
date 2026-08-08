@@ -25,7 +25,7 @@ export class Partida {
   /**
    * @param {object} deps
    * @param {object} deps.config {modoEntrada, minutos, incrementoSegundos,
-   *   arbitro, brancas, pretas, torneio, alarmes, somAtivado, somPecas}
+   *   arbitro, brancas, pretas, torneio, rodada, mesa, alarmes, somAtivado, somPecas}
    * @param {function} deps.anunciar
    * @param {function} deps.bipe
    * @param {function} deps.somLance (captura) => void

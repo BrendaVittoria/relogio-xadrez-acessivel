@@ -63,6 +63,14 @@
           <input type="text" id="nome-pretas" autocomplete="off">
           <label for="nome-torneio">Nome do torneio</label>
           <input type="text" id="nome-torneio" autocomplete="off">
+          <label for="rodada">Rodada</label>
+          <input type="text" id="rodada" autocomplete="off" inputmode="numeric"
+                 aria-describedby="rodada-ajuda">
+          <p id="rodada-ajuda" class="ajuda">Normalmente o número da rodada. Também aceita texto, como "Final" ou "3.2".</p>
+          <label for="mesa">Mesa</label>
+          <input type="text" id="mesa" autocomplete="off" inputmode="numeric"
+                 aria-describedby="mesa-ajuda">
+          <p id="mesa-ajuda" class="ajuda">Número da mesa onde a partida é jogada. Deixe vazio se não houver.</p>
         </fieldset>
 
         <fieldset>
@@ -206,6 +214,9 @@
       <h2 id="titulo-resultado">Fim da partida</h2>
       <p id="resultado-texto"></p>
       <p id="resultado-duracao"></p>
+      <!-- torneio, rodada e mesa: só aparece se foram preenchidos na sala
+           de espera, e vão junto no PGN -->
+      <p id="resultado-identificacao" hidden></p>
       <h3 id="titulo-historico-final">Histórico completo</h3>
       <ol id="historico-final" aria-labelledby="titulo-historico-final"></ol>
       <div class="acoes-linha">
