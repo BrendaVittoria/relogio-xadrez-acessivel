@@ -21,6 +21,18 @@ python -m http.server 8765
 e abra `http://localhost:8765`. (Abrir o `index.html` direto do disco não
 funciona: módulos ES e service worker exigem HTTP.)
 
+## Ao publicar uma mudança
+
+**Incremente `VERSAO` no topo do `sw.js`.** O service worker guarda os arquivos
+do app como um snapshot único e coerente: ou o cache inteiro é da versão
+antiga, ou é inteiro da nova. Trocar o número é o que dispara o download do
+snapshot novo nos aparelhos já instalados.
+
+Se esquecer, existe uma rede de segurança: o service worker compara o
+`index.html` publicado com o que está em cache e rebaixa tudo se forem
+diferentes. Mas ela não cobre uma publicação que mexa só nos `.js` — por isso o
+número.
+
 ## Estrutura
 
 | Arquivo | Papel |

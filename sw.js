@@ -1,10 +1,20 @@
 // Service worker: cache do app shell na instalação, para uso 100% offline.
-// Estratégia "stale-while-revalidate": responde na hora com o cache e renova
-// em segundo plano — mudanças publicadas aparecem na recarga seguinte, sem
-// precisar mudar o número da versão (o número só força uma reinstalação
-// completa, se algum dia for necessário).
+//
+// Estratégia "snapshot atômico": o cache guarda sempre um conjunto coerente de
+// arquivos, baixados de uma vez só. Ou o cache inteiro é o da versão antiga, ou
+// o inteiro é o da nova — nunca uma mistura. Isso importa porque index.html e
+// os módulos JS se referenciam entre si: um HTML novo com um JS antigo (ou o
+// contrário) quebra o app na abertura, e o cache antigo mantinha a quebra.
+//
+// A troca do snapshot acontece em duas situações:
+//   1. VERSAO muda (reinstalação completa do service worker);
+//   2. o index.html publicado ficou diferente do que está em cache — rede de
+//      segurança para o caso de a versão não ter sido incrementada.
+//
+// AO PUBLICAR UMA MUDANÇA: incremente VERSAO abaixo.
 
-const CACHE = 'relogio-xadrez-v2';
+const VERSAO = 3;
+const CACHE = `relogio-xadrez-v${VERSAO}`;
 
 const ARQUIVOS = [
   './',
@@ -44,13 +54,47 @@ const ARQUIVOS = [
   './icons/pecas/bp.svg',
 ];
 
+// no-store ignora o cache HTTP do navegador: garante que o snapshot é o que
+// está publicado agora, e não uma cópia guardada pelo próprio navegador
+const daRede = (url) => fetch(new Request(url, { cache: 'no-store' }));
+
+// Baixa todos os arquivos e só grava depois que TODOS chegaram inteiros. Se a
+// conexão falhar no meio (celular em rede instável), nada é gravado e o cache
+// anterior continua valendo — quebrado pela metade, nunca.
+async function gravarSnapshot(cache) {
+  const respostas = await Promise.all(ARQUIVOS.map(daRede));
+  const falhou = respostas.find((resposta) => !resposta || !resposta.ok);
+  if (falhou) throw new Error(`arquivo não baixado: ${falhou && falhou.url}`);
+  await Promise.all(respostas.map((resposta, i) => cache.put(ARQUIVOS[i], resposta)));
+}
+
+// Confere se o index.html publicado mudou em relação ao do cache. É o gatilho
+// reserva: se uma publicação esquecer de incrementar VERSAO, o app se conserta
+// sozinho na próxima abertura com internet.
+let jaConferiu = false;
+async function conferirAtualizacao() {
+  if (jaConferiu) return;
+  jaConferiu = true;
+  try {
+    const cache = await caches.open(CACHE);
+    const emCache = await cache.match('./index.html');
+    const publicado = await daRede('./index.html');
+    if (!publicado || !publicado.ok) return;
+    if (emCache && (await emCache.text()) === (await publicado.clone().text())) return;
+    await gravarSnapshot(cache);
+  } catch {
+    // sem internet ou download incompleto: segue com o snapshot atual
+  }
+}
+
 self.addEventListener('install', (evento) => {
   evento.waitUntil(
     caches.open(CACHE)
-      // cache: 'reload' ignora o cache HTTP do navegador — garante que uma
-      // versão nova do app instala os arquivos realmente novos do servidor
-      .then((cache) => cache.addAll(ARQUIVOS.map((url) => new Request(url, { cache: 'reload' }))))
-      .then(() => self.skipWaiting()),
+      .then(gravarSnapshot)
+      .then(() => {
+        jaConferiu = true; // acabou de baixar tudo; não precisa conferir de novo
+        return self.skipWaiting();
+      }),
   );
 });
 
@@ -69,25 +113,21 @@ self.addEventListener('fetch', (evento) => {
   if (requisicao.method !== 'GET' || !requisicao.url.startsWith(self.location.origin)) return;
 
   // navegações são sempre servidas pelo shell (./index.html)
-  const chave = requisicao.mode === 'navigate' ? './index.html' : requisicao;
-
-  const renovar = caches.open(CACHE).then(async (cache) => {
-    try {
-      // um request de navegação não pode ser refeito com opções (TypeError);
-      // para navegações, o shell é buscado pelo caminho — sem isso, o
-      // index.html nunca se renovaria pela rede
-      const daRede = requisicao.mode === 'navigate'
-        ? await fetch('./index.html', { cache: 'no-cache' })
-        : await fetch(requisicao, { cache: 'no-cache' });
-      if (daRede && daRede.ok) await cache.put(chave, daRede.clone());
-      return daRede;
-    } catch {
-      return null; // offline: fica com o que está no cache
-    }
-  });
+  const navegacao = requisicao.mode === 'navigate';
+  const chave = navegacao ? './index.html' : requisicao;
 
   evento.respondWith(
-    caches.match(chave).then((emCache) => emCache || renovar.then((r) => r || Response.error())),
+    caches.match(chave).then(async (emCache) => {
+      if (emCache) return emCache;
+      // fora do snapshot (arquivo novo, imagem externa ao shell): tenta a rede
+      try {
+        return await fetch(requisicao);
+      } catch {
+        return Response.error();
+      }
+    }),
   );
-  evento.waitUntil(renovar);
+
+  // a conferência roda em segundo plano, sem atrasar a resposta ao usuário
+  if (navegacao) evento.waitUntil(conferirAtualizacao());
 });

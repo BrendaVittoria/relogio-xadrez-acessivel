@@ -34,7 +34,10 @@ const $ = (id) => document.getElementById(id);
 const TELAS = ['tela-recuperacao', 'tela-setup', 'tela-jogo', 'tela-resultado'];
 
 function mostrarTela(id) {
-  for (const tela of TELAS) $(tela).hidden = tela !== id;
+  for (const tela of TELAS) {
+    const secao = $(tela);
+    if (secao) secao.hidden = tela !== id;
+  }
   const titulo = $(id).querySelector('h2');
   if (titulo) {
     titulo.tabIndex = -1;
@@ -768,27 +771,110 @@ function ligarEventos() {
 
 // ---------------- inicialização ----------------
 
-function iniciarApp() {
-  iniciarAnunciador($('anunciador'));
-  iniciarTemas();
-  formatoDescricao = lerFormatoDescricao();
-  renderizarPresets();
-  renderizarHistorico();
-  atualizarCamposPersonalizado();
-  ligarEventos();
-  verificarRecuperacao();
-
-  // O navegador só libera áudio depois de um gesto do usuário; o primeiro
-  // toque/tecla também é a deixa para baixar e decodificar as amostras, bem
-  // antes do primeiro lance.
-  const prepararAudio = () => precarregarSons();
-  document.addEventListener('pointerdown', prepararAudio, { once: true });
-  document.addEventListener('keydown', prepararAudio, { once: true });
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
+function registrarServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  // updateViaCache: 'none' impede que o próprio sw.js venha do cache HTTP, e o
+  // update() a cada abertura faz o app buscar uma versão nova assim que ela é
+  // publicada, em vez de esperar a checagem automática do navegador
+  navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' })
+    .then((registro) => registro.update())
+    .catch(() => {
       // sem service worker o app continua funcionando online
     });
+}
+
+// Descarta o app guardado no aparelho (cache + service worker) e recarrega da
+// rede. É a saída para quem ficou com uma cópia offline defeituosa.
+async function reinstalarApp(apagarDados) {
+  if (apagarDados) {
+    try { localStorage.clear(); } catch { /* modo privado bloqueia */ }
+  }
+  try {
+    if ('caches' in window) {
+      const chaves = await caches.keys();
+      await Promise.all(chaves.map((chave) => caches.delete(chave)));
+    }
+  } catch { /* segue mesmo assim: o unregister abaixo já ajuda */ }
+  try {
+    if ('serviceWorker' in navigator) {
+      const registros = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registros.map((registro) => registro.unregister()));
+    }
+  } catch { /* idem */ }
+  location.reload();
+}
+
+// Toda tela nasce com hidden no HTML e quem revela a primeira é o JavaScript:
+// se a inicialização quebrar, o usuário fica olhando uma página vazia, sem
+// saber o que houve nem como sair. Este painel é montado inteiramente em JS,
+// sem depender de elemento do index.html nem de classe do styles.css, porque
+// são justamente esses arquivos que podem estar com problema.
+function mostrarFalhaDeInicializacao(erro) {
+  const painel = document.createElement('section');
+  painel.setAttribute('role', 'alert');
+  painel.style.cssText = 'max-width:40rem;margin:1rem auto;padding:1rem;line-height:1.5';
+
+  const titulo = document.createElement('h2');
+  titulo.textContent = 'O aplicativo não conseguiu abrir';
+  titulo.tabIndex = -1;
+
+  const texto = document.createElement('p');
+  texto.textContent = 'Provavelmente a cópia guardada neste aparelho para uso '
+    + 'offline está incompleta. Baixar o aplicativo de novo costuma resolver. '
+    + 'Suas partidas salvas serão mantidas.';
+
+  const botao = document.createElement('button');
+  botao.type = 'button';
+  botao.textContent = 'Baixar o aplicativo de novo e recarregar';
+  botao.style.cssText = 'font-size:1rem;padding:0.75rem 1rem;margin:0.5rem 0';
+  botao.addEventListener('click', () => {
+    botao.disabled = true;
+    botao.textContent = 'Baixando…';
+    reinstalarApp(false);
+  });
+
+  const apagar = document.createElement('button');
+  apagar.type = 'button';
+  apagar.textContent = 'Se não resolver: apagar também os dados salvos';
+  apagar.style.cssText = 'font-size:0.9rem;padding:0.5rem;display:block;margin-top:0.5rem';
+  apagar.addEventListener('click', () => {
+    const certeza = confirm('Isso apaga o histórico de partidas e qualquer partida '
+      + 'em andamento guardados neste aparelho. Continuar?');
+    if (certeza) reinstalarApp(true);
+  });
+
+  const detalhe = document.createElement('p');
+  detalhe.style.cssText = 'font-size:0.85rem;opacity:0.8;margin-top:1rem';
+  detalhe.textContent = `Detalhe técnico: ${(erro && erro.message) || erro}`;
+
+  painel.append(titulo, texto, botao, apagar, detalhe);
+  document.body.appendChild(painel);
+  titulo.focus();
+}
+
+function iniciarApp() {
+  // registrado antes de tudo: mesmo que a inicialização quebre, o service
+  // worker fica instalado e busca a correção na próxima abertura com internet
+  registrarServiceWorker();
+
+  try {
+    iniciarAnunciador($('anunciador'));
+    iniciarTemas();
+    formatoDescricao = lerFormatoDescricao();
+    renderizarPresets();
+    renderizarHistorico();
+    atualizarCamposPersonalizado();
+    ligarEventos();
+    verificarRecuperacao();
+
+    // O navegador só libera áudio depois de um gesto do usuário; o primeiro
+    // toque/tecla também é a deixa para baixar e decodificar as amostras, bem
+    // antes do primeiro lance.
+    const prepararAudio = () => precarregarSons();
+    document.addEventListener('pointerdown', prepararAudio, { once: true });
+    document.addEventListener('keydown', prepararAudio, { once: true });
+  } catch (erro) {
+    mostrarFalhaDeInicializacao(erro);
   }
 }
 
