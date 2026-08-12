@@ -28,7 +28,7 @@ funciona: módulos ES e service worker exigem HTTP.)
 | `index.html` | As quatro telas (recuperação, sala de espera, jogo, resultado) e os diálogos |
 | `js/app.js` | Orquestração: telas, formulário de setup, preferências, recuperação, PGN |
 | `js/jogo.js` | Estado central da partida: chess.js + relógio + comandos + persistência |
-| `js/parser.js` | Parser tolerante de lances (roques, `ed5`, `e8q`, `ndf3`, ambiguidade `b`/`B`) |
+| `js/parser.js` | Parser tolerante de lances (roques, `ed5`, `e8q`, `ndf3`, `rfc8`, `n1f3`, `e2e4`, ambiguidade `b`/`B`) |
 | `js/comandos.js` | Tabela única `SPECIAL_COMMANDS` (t, p, r, m, back, note, modo, hold, go, draw, resign, ?) |
 | `js/relogio.js` | Relógio Fischer com alarmes, pausa e snapshots para `back` |
 | `js/tabuleiro.js` | Tabuleiro acessível (setas, Enter, Esc, casas foneticamente nomeadas) |
