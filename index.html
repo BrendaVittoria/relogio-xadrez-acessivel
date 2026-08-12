@@ -168,6 +168,11 @@
       <!-- Entrada por digitação: fica fora dos blocos de modo para quem
            está no computador poder digitar lances também no modo tabuleiro -->
       <div id="area-entrada">
+        <!-- Opções de um lance ambíguo: aparecem acima do campo enquanto a
+             pergunta está de pé. Quem digita responde pelo número, sem tirar
+             o foco da caixa; quem usa toque ou mouse clica no botão. -->
+        <div id="opcoes-ambiguidade" class="acoes-linha" role="group"
+             aria-label="Opções do lance ambíguo" hidden></div>
         <label for="entrada">Lance ou comando (digite ? para ajuda)</label>
         <input type="text" id="entrada" autocomplete="off" autocapitalize="off"
                autocorrect="off" spellcheck="false" enterkeyhint="send">

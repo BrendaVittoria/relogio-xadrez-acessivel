@@ -161,6 +161,17 @@ button:hover { border-color: var(--foco); }
 
 #entrada { font-size: 1.35rem; max-width: 20rem; }
 
+/* Opções de um lance ambíguo, logo acima da caixa: ficam à vista até um
+   lance entrar. O [hidden] precisa ser explícito aqui — o display:flex de
+   .acoes-linha vence a regra do navegador para o atributo. */
+#opcoes-ambiguidade {
+  margin: 0.35rem 0;
+  padding: 0.35rem 0.5rem;
+  border: 2px dashed var(--destaque);
+  border-radius: 8px;
+}
+#opcoes-ambiguidade[hidden] { display: none; }
+
 #historico {
   padding-left: 1.5rem;
   max-height: 14rem;

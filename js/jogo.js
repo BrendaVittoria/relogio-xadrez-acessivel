@@ -14,12 +14,20 @@ import {
 } from './fala.js';
 import { gravarPartidaAtual } from './armazenamento.js';
 
+// Peça da promoção: as iniciais são as do SAN, em inglês — as MESMAS letras
+// que já se digitam dentro de um lance (e8q, e7-e8=n). Iniciais em português
+// (d, t, c) sairiam de rota com o resto do app: a notação é inglesa e t é o
+// comando de tempo. Os nomes por extenso em português continuam valendo, para
+// quem prefere dizer a peça inteira.
 const LETRAS_PROMOCAO = {
-  q: 'q', d: 'q', dama: 'q', rainha: 'q',
-  r: 'r', t: 'r', torre: 'r',
+  q: 'q', dama: 'q', rainha: 'q',
+  r: 'r', torre: 'r',
   b: 'b', bispo: 'b',
-  n: 'n', c: 'n', cavalo: 'n',
+  n: 'n', cavalo: 'n',
 };
+
+const PECAS_PROMOCAO_FALADAS =
+  'q para dama, r para torre, b para bispo, n para cavalo';
 
 export class Partida {
   /**
@@ -100,8 +108,10 @@ export class Partida {
       btnModo: document.querySelector('#painel-acoes button[data-acao="modo"]'),
       btnSomPecas: document.getElementById('btn-som-pecas'),
       tabuleiroDigitacao: document.getElementById('tabuleiro-digitacao'),
+      opcoesAmbiguidade: document.getElementById('opcoes-ambiguidade'),
     };
     this._atualizarBotaoSomPecas();
+    this._mostrarOpcoesAmbiguidade(null); // limpa sobras da partida anterior
 
     // os tabuleiros mostram a posição em revisão, quando houver
     const obterChess = () => this.chessRevisao || this.chess;
@@ -179,8 +189,9 @@ export class Partida {
     const limpo = texto.trim();
 
     if (this.pendenciaPromocaoTexto) {
-      this._responderPromocaoTexto(limpo);
-      return;
+      if (this._responderPromocaoTexto(limpo)) return;
+      // não era a peça, mas era um lance que dá para entender: a promoção
+      // fica para trás e o lance novo segue o caminho normal
     }
     if (this.pendenciaAmbiguidade) {
       if (this._responderAmbiguidade(limpo)) return;
@@ -225,18 +236,19 @@ export class Partida {
       }
       case 'ambiguo': {
         this.pendenciaAmbiguidade = resultado.opcoes;
+        this._mostrarOpcoesAmbiguidade(resultado.opcoes);
         const opcoes = resultado.opcoes
           .map((op, i) => `${i + 1}: ${op.descricao}`)
           .join('; ');
         this._el.entrada.value = '';
-        this.anunciar(`Lance ambíguo. ${opcoes}. Digite o número da opção desejada, ou Enter vazio para cancelar.`);
+        this.anunciar(`Lance ambíguo. ${opcoes}. Digite o número da opção desejada, use os botões acima do campo, ou Enter vazio para cancelar.`);
         break;
       }
       case 'promocao': {
         this.pendenciaPromocaoTexto = resultado.baseSan;
         this._el.entrada.value = '';
         this.anunciar(
-          `Promoção de peão em ${nomeCasa(resultado.lanceBase.to)}. Digite d para dama, t para torre, b para bispo, c para cavalo, ou Enter vazio para cancelar.`,
+          `Promoção de peão em ${nomeCasa(resultado.lanceBase.to)}. Digite ${PECAS_PROMOCAO_FALADAS}, ou Enter vazio para cancelar.`,
         );
         break;
       }
@@ -244,6 +256,49 @@ export class Partida {
         this.anunciar(resultado.mensagem);
         this._el.entrada.select();
       }
+    }
+  }
+
+  // Os mesmos lances da pergunta, como botões acima da caixa, para quem usa
+  // toque ou mouse. O foco NÃO se move: quem digita responde pelo número sem
+  // sair do campo. Diferente da pergunta digitada — que a entrada seguinte já
+  // cancela —, os botões ficam à vista até um lance entrar: se a pessoa se
+  // perder no caminho, as opções continuam ali.
+  _mostrarOpcoesAmbiguidade(opcoes) {
+    const area = this._el.opcoesAmbiguidade;
+    area.replaceChildren();
+    area.hidden = !opcoes;
+    if (!opcoes) return;
+
+    for (const [i, opcao] of opcoes.entries()) {
+      const botao = document.createElement('button');
+      botao.type = 'button';
+      // à vista fica o lance curto; o leitor de tela lê a descrição inteira,
+      // começando pelo texto visível (o número é a mesma resposta digitada)
+      botao.textContent = `${i + 1}. ${opcao.san}`;
+      botao.setAttribute('aria-label', `${i + 1}. ${opcao.san}: ${opcao.descricao}`);
+      botao.onclick = () => this._escolherOpcaoAmbiguidade(opcao);
+      area.append(botao);
+    }
+  }
+
+  // Clique num dos botões: vale sozinho, mesmo que a pergunta digitada já
+  // tenha sido cancelada por outra entrada no meio do caminho.
+  _escolherOpcaoAmbiguidade(opcao) {
+    if (this.finalizada || !this._relogioLiberado()) return;
+    this.pendenciaAmbiguidade = null;
+    this._el.entrada.value = '';
+    const lance = this.chess.move(opcao.san);
+    this._aposLance(lance); // esconde os botões, via _atualizarTudo
+    this._recuperarFoco();
+  }
+
+  // O botão clicado sai do ar junto com as opções: sem isso o foco cai no
+  // corpo da página. Só age se ninguém mais assumiu o foco (o tabuleiro, por
+  // exemplo, fica com ele depois de um lance vindo de lá).
+  _recuperarFoco() {
+    if (!document.activeElement || document.activeElement === document.body) {
+      this._el.entrada.focus();
     }
   }
 
@@ -268,32 +323,40 @@ export class Partida {
     return false; // deixa a entrada ser processada como algo novo
   }
 
+  // Devolve true se a entrada foi a resposta da promoção. false significa
+  // "isto não é a peça, mas é um lance que dá para entender" — aí quem chamou
+  // processa a entrada do zero, sem a promoção no caminho.
   _responderPromocaoTexto(resposta) {
     const baseSan = this.pendenciaPromocaoTexto;
     this.pendenciaPromocaoTexto = null;
     if (!resposta) {
       this.anunciar('Promoção cancelada. Digite o lance novamente.');
-      return;
+      return true;
     }
     const letra = LETRAS_PROMOCAO[resposta.toLowerCase()];
     if (!letra) {
+      // Mudou de ideia e digitou outro lance? Ele vale, sem precisar cancelar
+      // a promoção antes. Só o que o parser não entende devolve a pergunta —
+      // assim um engano de digitação não faz perder o lance já começado.
+      if (interpretarEntrada(resposta, this.chess).tipo !== 'invalido') return false;
       this.pendenciaPromocaoTexto = baseSan;
-      this.anunciar('Opção não reconhecida. Digite d para dama, t para torre, b para bispo, c para cavalo, ou Enter vazio para cancelar.');
+      this.anunciar(`Opção não reconhecida. Digite ${PECAS_PROMOCAO_FALADAS}, ou Enter vazio para cancelar.`);
       this._el.entrada.select();
-      return;
+      return true;
     }
     if (!this._relogioLiberado()) {
       this.pendenciaPromocaoTexto = baseSan; // a pergunta continua valendo
-      return;
+      return true;
     }
     const lance = resolverPromocao(baseSan, letra, this.chess);
     if (!lance) {
       this.anunciar(`Promoção a ${nomePeca(letra)} não é legal nesta posição.`);
-      return;
+      return true;
     }
     this._el.entrada.value = '';
     const aplicado = this.chess.move(lance.san);
     this._aposLance(aplicado);
+    return true;
   }
 
   // ---------------- entrada pelo tabuleiro ----------------
@@ -874,6 +937,7 @@ export class Partida {
     if (this.finalizada) return;
     this.finalizada = true;
     this.relogio.parar();
+    this._mostrarOpcoesAmbiguidade(null);
     // Som do desfecho, junto com o anúncio: mate só no mate mesmo (abandono e
     // queda de bandeira também dão 1-0, mas não são mate); empate em qualquer
     // empate, combinado ou automático. Segue a opção de sons de aviso, não a
@@ -998,6 +1062,9 @@ export class Partida {
     this._atualizarHistorico();
     this.tabuleiro.atualizar();
     this.tabuleiroDigitacao.atualizar();
+    // a posição mudou (lance, apagar, corrigir): as opções da desambiguação
+    // não valem mais para ela
+    this._mostrarOpcoesAmbiguidade(null);
   }
 
   _salvar() {
