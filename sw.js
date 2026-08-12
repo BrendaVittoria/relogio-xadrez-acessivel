@@ -13,8 +13,9 @@
 //
 // AO PUBLICAR UMA MUDANÇA: incremente VERSAO abaixo.
 
-const VERSAO = 3;
-const CACHE = `relogio-xadrez-v${VERSAO}`;
+const VERSAO = 4;
+const PREFIXO = 'relogio-xadrez-';
+const CACHE = `${PREFIXO}v${VERSAO}`;
 
 const ARQUIVOS = [
   './',
@@ -102,7 +103,15 @@ self.addEventListener('activate', (evento) => {
   evento.waitUntil(
     caches.keys()
       .then((chaves) => Promise.all(
-        chaves.filter((chave) => chave !== CACHE).map((chave) => caches.delete(chave)),
+        // Só os caches DESTE app, nunca "todos menos o meu". O leitor de PGN
+        // mora no mesmo endereço (brendavittoria.github.io, outra pasta) e o
+        // armazenamento de caches é compartilhado por endereço, não por pasta:
+        // um app enxerga e pode apagar o cache do outro. Apagar tudo que não
+        // fosse meu deixava o outro app sem cópia offline a cada publicação —
+        // e ele parava de abrir no primeiro momento sem internet boa.
+        chaves
+          .filter((chave) => chave.startsWith(PREFIXO) && chave !== CACHE)
+          .map((chave) => caches.delete(chave)),
       ))
       .then(() => self.clients.claim()),
   );
@@ -117,7 +126,9 @@ self.addEventListener('fetch', (evento) => {
   const chave = navegacao ? './index.html' : requisicao;
 
   evento.respondWith(
-    caches.match(chave).then(async (emCache) => {
+    // busca dentro do MEU cache: caches.match() varre todos os caches do
+    // endereço, inclusive os do leitor de PGN e versões antigas minhas
+    caches.open(CACHE).then((cache) => cache.match(chave)).then(async (emCache) => {
       if (emCache) return emCache;
       // fora do snapshot (arquivo novo, imagem externa ao shell): tenta a rede
       try {

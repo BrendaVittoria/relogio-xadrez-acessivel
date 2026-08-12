@@ -33,6 +33,13 @@ Se esquecer, existe uma rede de segurança: o service worker compara o
 diferentes. Mas ela não cobre uma publicação que mexa só nos `.js` — por isso o
 número.
 
+**Nunca apague "todos os caches menos o meu".** Este app e o
+[leitor de PGN](https://github.com/BrendaVittoria/leitor-pgn-acessivel) moram no
+mesmo endereço (`brendavittoria.github.io`, pastas diferentes), e o
+armazenamento de caches é compartilhado por endereço, não por pasta: cada um
+enxerga e pode apagar o cache do outro. Filtre sempre pelo prefixo
+`relogio-xadrez-`.
+
 ## Estrutura
 
 | Arquivo | Papel |
