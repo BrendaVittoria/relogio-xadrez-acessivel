@@ -217,7 +217,11 @@ function blocosPorPeca(chess) {
       const linha = 8 - r;
       const coluna = 'abcdefgh'[c];
       const nome = `${NOMES_COLUNAS[coluna]} ${linha}`;
-      (porCor[casa.color][casa.type] ||= []).push({ nome, ord: c * 8 + linha });
+      // sem ||= : a atribuição lógica só existe a partir do Chrome 85, e por
+      // ser sintaxe nova ela impede o arquivo INTEIRO de carregar em navegador
+      // antigo — o app nem abre, em vez de falhar só aqui
+      const doTipo = porCor[casa.color][casa.type] || (porCor[casa.color][casa.type] = []);
+      doTipo.push({ nome, ord: c * 8 + linha });
     }
   }
 

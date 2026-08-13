@@ -303,6 +303,14 @@
        são o problema. -->
   <script>
     (function () {
+      // Guarda o primeiro erro de script da página: se um módulo nem carregar
+      // (sintaxe que o navegador antigo não entende, arquivo faltando), é essa
+      // mensagem que diz o motivo — e ela aparece no painel de socorro para a
+      // pessoa ler por telefone ao pedir ajuda.
+      var primeiroErro = '';
+      window.addEventListener('error', function (evento) {
+        if (!primeiroErro && evento && evento.message) primeiroErro = evento.message;
+      });
       function abriu() {
         return !!document.querySelector('main > section:not([hidden])')
           || !!document.querySelector('body > section[role="alert"]');
@@ -340,9 +348,19 @@
           }
           Promise.all(limpezas).then(fim, fim);
         };
+        var atualizar = document.createElement('p');
+        atualizar.textContent = 'Se baixar de novo não resolver, o navegador deste '
+          + 'aparelho pode estar desatualizado: procure "Chrome" na Play Store, '
+          + 'toque em Atualizar e tente outra vez.';
+        var detalhe = document.createElement('p');
+        detalhe.style.cssText = 'font-size:0.85rem;opacity:0.8;margin-top:1rem';
+        detalhe.textContent = 'Detalhe técnico: '
+          + (primeiroErro || 'nenhum erro registrado') + ' — ' + navigator.userAgent;
         painel.appendChild(titulo);
         painel.appendChild(texto);
         painel.appendChild(botao);
+        painel.appendChild(atualizar);
+        painel.appendChild(detalhe);
         document.body.appendChild(painel);
         titulo.focus();
       }

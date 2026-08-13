@@ -674,7 +674,10 @@ export class Partida {
       texto: `Correção do árbitro: lance ${numero} das ${cor} alterado de ${descreverLanceFalado(antigo)} para ${descreverLanceFalado(corrigido)}.`,
       registradaEm: new Date().toISOString(),
     });
-    const ultimo = novo.history({ verbose: true }).at(-1);
+    // sem .at(-1): só existe a partir do Chrome 92, e celulares com navegador
+    // parado no tempo (2020/2021) quebrariam aqui
+    const lances = novo.history({ verbose: true });
+    const ultimo = lances[lances.length - 1];
     this.ultimoLanceAnunciado =
       `${nomeCor(ultimo.color)}: ${descreverLanceFalado(ultimo)}${sufixoXeque(ultimo.san)}`;
     this._atualizarTudo();
