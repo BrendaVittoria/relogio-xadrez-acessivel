@@ -8,7 +8,7 @@ import { TabuleiroAcessivel } from './tabuleiro.js';
 import { interpretarEntrada, resolverPromocao } from './parser.js';
 import { identificarComando, textoAjuda } from './comandos.js';
 import {
-  anunciarLanceAplicado, descreverLance, descreverLanceFalado, sufixoXeque,
+  anunciarLanceAplicado, descreverLance, descreverLanceFalado, descreverPecas, sufixoXeque,
   nomeCasa, nomeCor, nomePeca, preencherListaLances,
   tempoFalado, tempoVisual, VALOR_PECAS,
 } from './fala.js';
@@ -424,7 +424,7 @@ export class Partida {
     if (this.finalizada) return;
     switch (cmd) {
       case 't': this._comandoTempo(); break;
-      case 'p': this._comandoPosicao(); break;
+      case 'p': this._comandoPosicao(arg); break;
       case 'r': this._comandoRepetir(); break;
       case 'm': this._comandoMaterial(); break;
       case 'back': this._comandoDesfazer(); break;
@@ -449,9 +449,16 @@ export class Partida {
 
   // A posição vai para um diálogo em blocos, como no leitor de PGN: em vez de
   // um anúncio único e comprido, quem lê percorre frase a frase no seu ritmo.
-  _comandoPosicao() {
+  // Com uma peça pedida ("p N"), a resposta é uma frase só e vai direto ao
+  // anunciador: abrir o diálogo para ouvir duas casas seria mais caminho do
+  // que conteúdo.
+  _comandoPosicao(peca) {
     // durante a revisão do histórico, descreve a posição que está na tela
     const chess = this.chessRevisao || this.chess;
+    if (peca) {
+      this.anunciar(descreverPecas(chess, peca.tipo, peca.cor));
+      return;
+    }
     const titulo = this.posicaoRevisao !== null ? 'Posição navegada' : 'Posição atual';
     this.aoDescreverPosicao(chess, titulo);
   }

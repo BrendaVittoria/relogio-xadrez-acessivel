@@ -3,7 +3,7 @@
 
 export const SPECIAL_COMMANDS = [
   { cmd: 't', descricao: 'anuncia o tempo restante de cada jogador' },
-  { cmd: 'p', descricao: 'abre o diálogo com a descrição da posição, linha a linha, com um botão para trocar entre descrição por peça e por fileira' },
+  { cmd: 'p', descricao: 'abre o diálogo com a descrição da posição, linha a linha, com um botão para trocar entre descrição por peça e por fileira. Com a letra de uma peça, anuncia só onde ela está, sem abrir o diálogo: p N para os cavalos brancos, p n para os cavalos pretos; maiúscula é brancas, minúscula é pretas, e as letras são as da notação, K rei, Q dama, R torre, B bispo, N cavalo, P peão' },
   { cmd: 'r', descricao: 'repete o último lance anunciado' },
   { cmd: 'm', descricao: 'anuncia o material capturado e a diferença de material' },
   { cmd: 'back', descricao: 'desfaz o último lance, restaurando tabuleiro e relógio; atalho: a, de apagar' },
@@ -33,6 +33,24 @@ export function identificarComando(entrada) {
 
   if (COMANDOS_SIMPLES.has(minusculo)) return { cmd: minusculo };
   if (minusculo === 'a') return { cmd: 'back' }; // atalho de "apagar" o último lance
+
+  // "p N": onde estão as peças de um tipo, como no Lichess. A letra é a da
+  // notação, e a caixa diz a cor — maiúscula brancas, minúscula pretas —, por
+  // isso o teste é feito no texto original, não no minúsculo.
+  if (/^p\s+\S/i.test(texto)) {
+    const m = texto.match(/^p\s+([kqrbnpKQRBNP])\s*$/i);
+    if (m) {
+      const letra = m[1];
+      return {
+        cmd: 'p',
+        arg: { tipo: letra.toLowerCase(), cor: letra === letra.toUpperCase() ? 'w' : 'b' },
+      };
+    }
+    return {
+      cmd: 'p',
+      erro: 'Para localizar uma peça, diga p e a letra dela: K rei, Q dama, R torre, B bispo, N cavalo, P peão. Maiúscula para brancas, minúscula para pretas. Exemplo: p n para os cavalos pretos.',
+    };
+  }
 
   if (/^corrigir\b/i.test(texto)) {
     const completa = texto.match(/^corrigir\s+(\d+)\s+(brancas|pretas)\s+(\S+)\s*$/i);

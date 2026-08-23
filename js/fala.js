@@ -209,9 +209,10 @@ export function descreverPosicaoBlocos(chess, formato = 'pecas') {
   return blocos;
 }
 
-// Formato "por peça": um bloco com a cor, e depois uma linha por tipo de
-// peça — quebrada em várias quando passa do teto de peças por linha.
-function blocosPorPeca(chess) {
+// Casas ocupadas, agrupadas por cor e tipo de peça, já na ordem de leitura
+// (coluna anna à hector, e dentro da coluna da fileira 1 à 8):
+// { w: { k: ['eva 1'], p: [...] }, b: {...} }.
+function casasPorPeca(chess) {
   const board = chess.board(); // matriz 8x8, [0]=linha 8
   const porCor = { w: {}, b: {} };
   for (let r = 0; r < 8; r++) {
@@ -228,7 +229,32 @@ function blocosPorPeca(chess) {
       doTipo.push({ nome, ord: c * 8 + linha });
     }
   }
+  for (const cor of ['w', 'b']) {
+    for (const tipo of Object.keys(porCor[cor])) {
+      porCor[cor][tipo] = porCor[cor][tipo].sort((a, b) => a.ord - b.ord).map((x) => x.nome);
+    }
+  }
+  return porCor;
+}
 
+// Resposta do comando "p N": só as casas de um tipo de peça de uma cor, em
+// uma frase, para o anunciador — "Cavalos pretos: bella 8 e gustav 8."
+export function descreverPecas(chess, tipo, cor) {
+  const casas = casasPorPeca(chess)[cor][tipo] || [];
+  const feminino = PECAS[tipo].artigo === 'a';
+  if (!casas.length) {
+    return `${feminino ? 'Nenhuma' : 'Nenhum'} ${SINGULARES[tipo]} ${adjetivoCor(tipo, cor)} no tabuleiro.`;
+  }
+  const nome = casas.length === 1 ? SINGULARES[tipo] : PLURAIS[tipo];
+  const adjetivo = casas.length === 1 ? adjetivoCor(tipo, cor) : `${adjetivoCor(tipo, cor)}s`;
+  const rotulo = `${nome} ${adjetivo}`;
+  return `${rotulo[0].toUpperCase()}${rotulo.slice(1)}: ${juntarCasas(casas)}.`;
+}
+
+// Formato "por peça": um bloco com a cor, e depois uma linha por tipo de
+// peça — quebrada em várias quando passa do teto de peças por linha.
+function blocosPorPeca(chess) {
+  const porCor = casasPorPeca(chess);
   const blocos = [];
   for (const cor of ['w', 'b']) {
     blocos.push(cor === 'w' ? 'Brancas:' : 'Pretas:');
@@ -237,12 +263,11 @@ function blocosPorPeca(chess) {
       const lista = porCor[cor][tipo];
       if (!lista || !lista.length) continue;
       alguma = true;
-      lista.sort((a, b) => a.ord - b.ord);
       const rotulo = lista.length === 1 ? SINGULARES[tipo] : PLURAIS[tipo];
       // O rótulo sai uma vez só: as linhas seguintes do mesmo tipo são a
       // continuação da lista de casas, e repetir "peões" três vezes é fala
       // sobrando no meio do que interessa.
-      fatiar(lista.map((x) => x.nome)).forEach((fatia, i) => {
+      fatiar(lista).forEach((fatia, i) => {
         blocos.push(i === 0 ? `${rotulo} ${juntarCasas(fatia)}.` : `${juntarCasas(fatia)}.`);
       });
     }
