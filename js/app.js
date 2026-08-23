@@ -363,6 +363,14 @@ function duracaoFalada(ms) {
   return 'menos de um minuto';
 }
 
+// `sans` guarda meios-lances (cada jogada de brancas ou pretas). Um lance
+// completo é o par; a jogada solta das brancas no fim conta como lance também,
+// como na numeração do PGN.
+function lancesFalados(sans = []) {
+  const lances = Math.ceil(sans.length / 2);
+  return `${lances} ${lances === 1 ? 'lance' : 'lances'}`;
+}
+
 // Torneio, rodada e mesa em uma linha só; vazio quando nenhum dos três foi
 // preenchido, para a tela não ganhar um parágrafo sem conteúdo.
 function identificacaoDaPartida(config = {}) {
@@ -377,7 +385,7 @@ function preencherTelaResultado(fim) {
   $('resultado-texto').textContent =
     `Resultado: ${fim.resultado.replace('1/2-1/2', '½-½')} — ${NOME_RESULTADO[fim.resultado]}, por ${fim.motivo}.`;
   $('resultado-duracao').textContent =
-    `Duração da partida: ${duracaoFalada((fim.encerradaEm || Date.now()) - fim.iniciadaEm)}. ${fim.sans.length} ${fim.sans.length === 1 ? 'lance' : 'lances'}.`;
+    `Duração da partida: ${duracaoFalada((fim.encerradaEm || Date.now()) - fim.iniciadaEm)}. ${lancesFalados(fim.sans)}.`;
 
   const identificacao = $('resultado-identificacao');
   identificacao.textContent = identificacaoDaPartida(fim.config);
@@ -424,12 +432,11 @@ function descricaoDePartida(partida) {
   const brancas = partida.config.brancas || '?';
   const pretas = partida.config.pretas || '?';
   const resultado = partida.resultado.replace('1/2-1/2', '½-½');
-  const lances = partida.sans.length;
   const onde = [];
   if (partida.config.rodada) onde.push(`rodada ${partida.config.rodada}`);
   if (partida.config.mesa) onde.push(`mesa ${partida.config.mesa}`);
   const lugar = onde.length ? ` — ${onde.join(', ')}` : '';
-  return `${quando}${lugar} — ${brancas} contra ${pretas} — ${resultado}, por ${partida.motivo}, ${lances} ${lances === 1 ? 'lance' : 'lances'}`;
+  return `${quando}${lugar} — ${brancas} contra ${pretas} — ${resultado}, por ${partida.motivo}, ${lancesFalados(partida.sans)}`;
 }
 
 function renderizarHistorico() {
@@ -481,16 +488,16 @@ function verificarRecuperacao() {
     return;
   }
   const quando = new Date(salvo.iniciadaEm).toLocaleString('pt-BR');
-  const lances = (salvo.sans || []).length;
+  const lances = lancesFalados(salvo.sans);
   if (salvo.finalizada && salvo.resultado) {
     $('titulo-recuperacao').textContent = 'Partida encerrada sem PGN baixado';
     $('recuperacao-descricao').textContent =
-      `Existe uma partida encerrada (iniciada em ${quando}, ${lances} lances, resultado ${salvo.resultado}) cujo PGN ainda não foi baixado nem compartilhado. Deseja abrir a tela de resultado para baixá-lo?`;
+      `Existe uma partida encerrada (iniciada em ${quando}, ${lances}, resultado ${salvo.resultado}) cujo PGN ainda não foi baixado nem compartilhado. Deseja abrir a tela de resultado para baixá-lo?`;
     $('btn-recuperar').textContent = 'Abrir tela de resultado';
   } else {
     $('titulo-recuperacao').textContent = 'Partida em andamento encontrada';
     $('recuperacao-descricao').textContent =
-      `Existe uma partida em andamento (iniciada em ${quando}, ${lances} ${lances === 1 ? 'lance' : 'lances'}). Deseja continuar essa partida?`;
+      `Existe uma partida em andamento (iniciada em ${quando}, ${lances}). Deseja continuar essa partida?`;
     $('btn-recuperar').textContent = 'Continuar a partida';
   }
   mostrarTela('tela-recuperacao');
