@@ -448,32 +448,74 @@ function renderizarHistorico() {
 
   for (const partida of historico) {
     const item = document.createElement('li');
+    const descricao = descricaoDePartida(partida);
     const texto = document.createElement('span');
-    texto.textContent = descricaoDePartida(partida);
+    texto.textContent = descricao;
     item.appendChild(texto);
 
+    const botao = (rotulo, ariaLabel, aoClicar) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = rotulo;
+      b.setAttribute('aria-label', ariaLabel);
+      b.addEventListener('click', aoClicar);
+      return b;
+    };
+
+    // Um botão só por partida abre as ações: a lista fica curta de navegar,
+    // em vez de quatro botões por item entre uma partida e a seguinte.
     const acoes = document.createElement('span');
     acoes.className = 'acoes-linha';
-    const btnBaixar = document.createElement('button');
-    btnBaixar.type = 'button';
-    btnBaixar.textContent = 'Baixar PGN';
-    btnBaixar.setAttribute('aria-label', `Baixar PGN da partida de ${descricaoDePartida(partida)}`);
-    btnBaixar.addEventListener('click', () => {
+    acoes.hidden = true;
+
+    const btnOpcoes = botao('Ver opções', `Opções da partida de ${descricao}`, () => {
+      const mostrar = acoes.hidden;
+      acoes.hidden = !mostrar;
+      btnOpcoes.setAttribute('aria-expanded', String(mostrar));
+      btnOpcoes.textContent = mostrar ? 'Ocultar opções' : 'Ver opções';
+    });
+    btnOpcoes.setAttribute('aria-expanded', 'false');
+    item.appendChild(btnOpcoes);
+
+    acoes.appendChild(botao('Baixar PGN', `Baixar PGN da partida de ${descricao}`, () => {
       const { texto: pgn, nome } = pgnDaPartida(partida);
       baixarPgn(pgn, nome);
       anunciar('PGN baixado.');
-    });
-    const btnApagar = document.createElement('button');
-    btnApagar.type = 'button';
-    btnApagar.textContent = 'Apagar';
-    btnApagar.setAttribute('aria-label', `Apagar do histórico a partida de ${descricaoDePartida(partida)}`);
-    btnApagar.addEventListener('click', () => {
+    }));
+
+    // Compartilhar e Copiar seguem as mesmas condições da tela de resultado:
+    // só aparecem quando o navegador aceita o recurso.
+    const { texto: pgn, nome } = pgnDaPartida(partida);
+    if (arquivoParaCompartilhar(pgn, nome) !== null) {
+      acoes.appendChild(botao('Compartilhar', `Compartilhar a partida de ${descricao}`, async () => {
+        const arquivo = arquivoParaCompartilhar(pgn, nome);
+        if (!arquivo) return;
+        try {
+          await compartilharPgn(arquivo, 'Partida de xadrez (PGN)');
+          anunciar('PGN compartilhado.');
+        } catch (erro) {
+          if (erro.name !== 'AbortError') {
+            anunciar('Não foi possível compartilhar. Use o botão Baixar PGN.');
+          }
+        }
+      }));
+    }
+    if (navigator.clipboard) {
+      acoes.appendChild(botao('Copiar PGN', `Copiar PGN da partida de ${descricao}`, async () => {
+        try {
+          await navigator.clipboard.writeText(pgn);
+          anunciar('PGN copiado para a área de transferência.');
+        } catch {
+          anunciar('Não foi possível copiar. Use o botão Baixar PGN.');
+        }
+      }));
+    }
+
+    acoes.appendChild(botao('Apagar', `Apagar do histórico a partida de ${descricao}`, () => {
       removerDoHistorico(partida.iniciadaEm);
       renderizarHistorico();
       anunciar('Partida apagada do histórico.');
-    });
-    acoes.appendChild(btnBaixar);
-    acoes.appendChild(btnApagar);
+    }));
     item.appendChild(acoes);
     lista.appendChild(item);
   }

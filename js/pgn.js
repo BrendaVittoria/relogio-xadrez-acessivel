@@ -28,7 +28,7 @@ export function gerarPgn({ config, sans, notas, resultado, data }) {
   // seria só ruído no arquivo.
   const tags = [
     `[Event "${tagOuInterrogacao(config.torneio)}"]`,
-    `[Site "?"]`,
+    `[Site "Relógio acessível"]`,
     `[Date "${dataPgn}"]`,
     `[Round "${tagOuInterrogacao(config.rodada)}"]`,
     `[White "${tagOuInterrogacao(config.brancas)}"]`,
