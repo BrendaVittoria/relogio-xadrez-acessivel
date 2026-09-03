@@ -329,7 +329,7 @@ select {
 /* o Ver histórico não disputa a linha com os dois de navegação */
 #tela-jogo #controles-lance #btn-ver-historico { flex-basis: 100%; }
 
-.simbolo-lance { font-size: 1.4em; line-height: 1; }
+.simbolo-lance { font-size: 1.8em; line-height: 1; }
 
 /* ---------------- Painel de ações ---------------- */
 
