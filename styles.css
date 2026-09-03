@@ -196,6 +196,7 @@ button:hover { border-color: var(--foco); }
    do celular some na rolagem, redimensionando o tabuleiro no meio dela. */
 .tab-quadro {
   width: min(100%, 88vmin, 30rem);
+  margin-inline: auto; /* centralizado quando sobra largura na coluna */
 }
 
 .tab-grade {
@@ -287,24 +288,43 @@ select {
 
 /* ---------------- Navegação pelo histórico ---------------- */
 
-/* Sempre à vista, logo abaixo do tabuleiro: dois alvos largos, lado a lado,
-   com o triângulo de play apontando para o lado do movimento. */
+/* Sempre à vista, logo abaixo do tabuleiro, como nos apps de análise: a
+   bolinha da vez e os dois botões compactos, lado a lado e centralizados
+   sob o tabuleiro, com o triângulo apontando para o lado do movimento. */
 #controles-lance {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.75rem;
   margin-top: 0.5rem;
+  width: min(100%, 88vmin, 30rem);
+  margin-inline: auto;
+  justify-content: center;
+  align-items: center;
 }
 
+/* Bolinha da vez: branca quando jogam as brancas, preta quando jogam as
+   pretas, seguindo a posição mostrada no tabuleiro (inclusive em revisão).
+   A borda garante que ela apareça sobre qualquer fundo. */
+#indicador-vez {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  border: 2px solid var(--texto-suave);
+  background: #fff;
+}
+#indicador-vez.pretas { background: #000; }
+
 /* dois ids para vencer a regra de botões pequenos do celular, que zera
-   margens só dela mesma */
+   margens só dela mesma. Largura fixa e pequena: os dois cabem lado a lado
+   em qualquer tela e nunca quebram um para baixo do outro. */
 #tela-jogo #controles-lance button {
-  flex: 1 1 8rem;
+  flex: none;
+  width: 5.5rem;
   margin: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
 }
 
 /* o Ver histórico não disputa a linha com os dois de navegação */

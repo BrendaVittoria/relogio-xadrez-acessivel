@@ -104,6 +104,7 @@ export class Partida {
       btnPausar: document.getElementById('btn-pausar'),
       btnComecar: document.getElementById('btn-comecar'),
       btnVerHistorico: document.getElementById('btn-ver-historico'),
+      indicadorVez: document.getElementById('indicador-vez'),
       areaHistorico: document.getElementById('area-historico'),
       btnModo: document.querySelector('#painel-acoes button[data-acao="modo"]'),
       btnSomPecas: document.getElementById('btn-som-pecas'),
@@ -529,8 +530,7 @@ export class Partida {
     this.correcaoTabuleiro = null; // trocar de modo desiste da correção em curso
     this._sairDaRevisao();
     if (estavaNavegando) {
-      this.tabuleiro.atualizar();
-      this.tabuleiroDigitacao.atualizar();
+      this._atualizarTabuleiros();
     }
     this._el.btnVerHistorico.setAttribute('aria-expanded', 'false');
     this._el.btnVerHistorico.textContent = 'Ver histórico';
@@ -561,8 +561,7 @@ export class Partida {
       // de volta ao presente
       this.posicaoRevisao = null;
       this.chessRevisao = null;
-      this.tabuleiro.atualizar();
-      this.tabuleiroDigitacao.atualizar();
+      this._atualizarTabuleiros();
       this.anunciar('Posição atual.');
       return;
     }
@@ -572,8 +571,7 @@ export class Partida {
       c.move({ from: verboso[i].from, to: verboso[i].to, promotion: verboso[i].promotion });
     }
     this.chessRevisao = c;
-    this.tabuleiro.atualizar();
-    this.tabuleiroDigitacao.atualizar();
+    this._atualizarTabuleiros();
     if (alvo === 0) {
       this.anunciar('Posição inicial.');
     } else {
@@ -702,8 +700,7 @@ export class Partida {
       // segundo toque no botão cancela a correção
       this.correcaoTabuleiro = null;
       this._sairDaRevisao();
-      this.tabuleiro.atualizar();
-      this.tabuleiroDigitacao.atualizar();
+      this._atualizarTabuleiros();
       this.anunciar('Correção cancelada.');
       return;
     }
@@ -1067,11 +1064,19 @@ export class Partida {
     preencherListaLances(this._el.historico, this.chess.history({ verbose: true }));
   }
 
+  // Os dois tabuleiros e a bolinha da vez seguem juntos a posição mostrada
+  // (a da revisão, quando o histórico está sendo navegado).
+  _atualizarTabuleiros() {
+    this.tabuleiro.atualizar();
+    this.tabuleiroDigitacao.atualizar();
+    const chess = this.chessRevisao || this.chess;
+    this._el.indicadorVez.classList.toggle('pretas', chess.turn() === 'b');
+  }
+
   _atualizarTudo() {
     this._atualizarRelogios();
     this._atualizarHistorico();
-    this.tabuleiro.atualizar();
-    this.tabuleiroDigitacao.atualizar();
+    this._atualizarTabuleiros();
     // a posição mudou (lance, apagar, corrigir): as opções da desambiguação
     // não valem mais para ela
     this._mostrarOpcoesAmbiguidade(null);
