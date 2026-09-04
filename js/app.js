@@ -66,27 +66,29 @@ function renderizarPresets() {
     ...presetsPromovidos().map((p) => ({ ...p, promovido: true })),
   ];
   todos.forEach((preset, i) => {
-    const rotulo = document.createElement('label');
+    // Mesmo desenho dos rádios do index.html: input e label irmãos, ligados
+    // só por for/id. Input dentro do label é o que o TalkBack lê mal.
+    const linha = document.createElement('div');
+    linha.className = 'opcao';
     const radio = document.createElement('input');
     radio.type = 'radio';
     radio.name = 'preset-tempo';
     radio.value = `${preset.minutos}+${preset.incrementoSegundos}`;
-    // associação explícita por for/id: o TalkBack não lê o rótulo
-    // implícito (input dentro de label) de forma confiável
     radio.id = `preset-tempo-${i}`;
-    rotulo.htmlFor = radio.id;
     if (radio.value === escolhido) radio.checked = true;
-    rotulo.appendChild(radio);
-    const texto = document.createElement('span');
-    texto.textContent =
+    const rotulo = document.createElement('label');
+    rotulo.htmlFor = radio.id;
+    rotulo.textContent =
       `${rotuloPreset(preset.minutos, preset.incrementoSegundos)}${preset.promovido ? ' (preset seu)' : ''}`;
-    rotulo.appendChild(texto);
-    lista.appendChild(rotulo);
+    linha.append(radio, rotulo);
+    lista.appendChild(linha);
   });
-  // primeira carga, ou preset promovido que saiu da lista: cai no primeiro
+  // primeira carga, ou preset promovido que saiu da lista: cai no 30+15, o
+  // padrão de sempre (a lista começa no 15+10, mas ele não vira o padrão)
   if (!presetSelecionado()) {
-    const primeiro = lista.querySelector('input[name="preset-tempo"]');
-    if (primeiro) primeiro.checked = true;
+    const padrao = lista.querySelector('input[name="preset-tempo"][value="30+15"]')
+      || lista.querySelector('input[name="preset-tempo"]');
+    if (padrao) padrao.checked = true;
   }
   atualizarCamposPersonalizado();
 }

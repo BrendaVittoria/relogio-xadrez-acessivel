@@ -45,6 +45,7 @@ export function gravarPreferencias(nomeArbitro, prefs) {
 // ---------------- Presets promovidos (por dispositivo) ----------------
 
 export const PRESETS_FIXOS = [
+  { minutos: 15, incrementoSegundos: 10 },
   { minutos: 30, incrementoSegundos: 15 },
   { minutos: 45, incrementoSegundos: 15 },
   { minutos: 45, incrementoSegundos: 30 },

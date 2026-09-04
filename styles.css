@@ -60,13 +60,18 @@ fieldset {
 legend { font-weight: 600; padding: 0 0.4rem; }
 
 label { display: block; margin: 0.6rem 0 0.25rem; }
-label:has(input[type="radio"]),
-label:has(input[type="checkbox"]) {
+
+/* Linha de rádio ou caixa de marcar: o input e o label são irmãos dentro
+   de .opcao (o input NÃO fica dentro do label — o TalkBack lê esse
+   aninhamento de forma instável). O label continua clicável pelo for/id. */
+.opcao {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0;
 }
+.opcao label { margin: 0; }
+.opcao input { flex: none; }
 
 input[type="text"],
 input[type="number"] {

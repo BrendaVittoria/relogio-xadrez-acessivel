@@ -13,7 +13,7 @@
 //
 // AO PUBLICAR UMA MUDANÇA: incremente VERSAO abaixo.
 
-const VERSAO = 10;
+const VERSAO = 11;
 const PREFIXO = 'relogio-xadrez-';
 const CACHE = `${PREFIXO}v${VERSAO}`;
 
