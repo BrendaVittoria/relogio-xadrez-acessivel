@@ -170,10 +170,12 @@ self.addEventListener('fetch', (evento) => {
   const navegacao = requisicao.mode === 'navigate';
   const chave = navegacao ? './index.html' : requisicao;
 
+  // a troca de snapshot só acontece aqui, antes do primeiro arquivo da
+  // página sair: assim ela nunca mistura versões
+  const troca = navegacao ? aplicarSnapshotEmEspera() : Promise.resolve();
+
   evento.respondWith((async () => {
-    // a troca de snapshot só acontece aqui, antes do primeiro arquivo da
-    // página sair: assim ela nunca mistura versões
-    if (navegacao) await aplicarSnapshotEmEspera();
+    await troca;
     // busca dentro do MEU cache: caches.match() varre todos os caches do
     // endereço, inclusive os do leitor de PGN e versões antigas minhas
     const cache = await caches.open(CACHE);
@@ -187,6 +189,8 @@ self.addEventListener('fetch', (evento) => {
     }
   })());
 
-  // a conferência roda em segundo plano, sem atrasar a resposta ao usuário
-  if (navegacao) evento.waitUntil(conferirAtualizacao());
+  // a conferência roda em segundo plano, sem atrasar a resposta ao usuário —
+  // mas só depois da troca, senão compara o index.html antigo com o publicado
+  // e baixa de novo um snapshot que acabou de ser aplicado
+  if (navegacao) evento.waitUntil(troca.then(conferirAtualizacao));
 });
