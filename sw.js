@@ -19,9 +19,12 @@
 // cache em uso) deixava index.html de uma versão com módulos de outra — o app
 // "bugava depois da atualização" até a pessoa recarregar de novo.
 //
-// AO PUBLICAR UMA MUDANÇA: incremente VERSAO abaixo.
+// AO PUBLICAR UMA MUDANÇA: incremente VERSAO_APP em js/versao.js (o mesmo
+// número aparece no rodapé da página). Mudança nesse arquivo também conta
+// como mudança do service worker, então o navegador reinstala.
 
-const VERSAO = 11;
+importScripts('./js/versao.js');
+const VERSAO = self.VERSAO_APP;
 const PREFIXO = 'relogio-xadrez-';
 const CACHE = `${PREFIXO}v${VERSAO}`;
 // cache de espera: recebe o snapshot novo sem mexer no que está servindo
@@ -45,6 +48,7 @@ const ARQUIVOS = [
   './js/pgn.js',
   './js/armazenamento.js',
   './js/temas.js',
+  './js/versao.js',
   './vendor/chess.js',
   './sounds/move.mp3',
   './sounds/capture.mp3',

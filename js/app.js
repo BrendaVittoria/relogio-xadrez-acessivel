@@ -80,6 +80,9 @@ function renderizarPresets() {
     rotulo.htmlFor = radio.id;
     rotulo.textContent =
       `${rotuloPreset(preset.minutos, preset.incrementoSegundos)}${preset.promovido ? ' (preset seu)' : ''}`;
+    // nome no próprio input, como nos rádios do index.html: o TalkBack já
+    // falhou em ler o nome vindo do label
+    radio.setAttribute('aria-label', rotulo.textContent);
     linha.append(radio, rotulo);
     lista.appendChild(linha);
   });
@@ -910,6 +913,7 @@ function iniciarApp() {
 
   try {
     iniciarAnunciador($('anunciador'));
+    if (window.VERSAO_APP) $('versao-app').textContent = `Versão ${window.VERSAO_APP}`;
     iniciarTemas();
     formatoDescricao = lerFormatoDescricao();
     renderizarPresets();

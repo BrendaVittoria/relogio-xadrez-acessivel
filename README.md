@@ -23,7 +23,9 @@ funciona: módulos ES e service worker exigem HTTP.)
 
 ## Ao publicar uma mudança
 
-**Incremente `VERSAO` no topo do `sw.js`.** O service worker guarda os arquivos
+**Incremente `VERSAO_APP` em `js/versao.js`.** É o número que o `sw.js` usa
+como `VERSAO` e que aparece no rodapé da página ("Versão N") — quem pede ajuda
+consegue dizer qual tem instalada. O service worker guarda os arquivos
 do app como um snapshot único e coerente: ou o cache inteiro é da versão
 antiga, ou é inteiro da nova. Trocar o número é o que dispara o download do
 snapshot novo nos aparelhos já instalados.
