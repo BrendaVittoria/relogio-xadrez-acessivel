@@ -66,6 +66,10 @@ export class TabuleiroAcessivel {
         // letras na fileira 1), para não roubar espaço do tabuleiro. São
         // apenas decorativas: quem usa leitor de tela já ouve o nome da casa
         // no rótulo de cada botão (aria-label ignora este conteúdo).
+        // As faixas de fora (montadas abaixo) existem ao mesmo tempo no DOM:
+        // qual das duas aparece é decidido pelo CSS, a partir do atributo
+        // data-coordenadas da página — assim a escolha troca na hora, sem
+        // remontar o tabuleiro e sem perder foco nem seleção.
         if (c === 0) {
           const coord = document.createElement('span');
           coord.className = 'tab-coord tab-coord-linha';
@@ -89,7 +93,9 @@ export class TabuleiroAcessivel {
 
     const quadro = document.createElement('div');
     quadro.className = 'tab-quadro';
+    quadro.appendChild(this._faixaCoordenadas('linhas'));
     quadro.appendChild(grade);
+    quadro.appendChild(this._faixaCoordenadas('colunas'));
 
     // só a dica essencial: não dá para detectar o NVDA pelo navegador
     // (leitores de tela não são expostos ao site), então ela fica para todos
@@ -101,6 +107,24 @@ export class TabuleiroAcessivel {
     this.container.appendChild(quadro);
     this.container.appendChild(legenda);
     this.grade = grade;
+  }
+
+  // Faixa de coordenadas ao redor do tabuleiro (números à esquerda, letras
+  // embaixo), usada quando a pessoa escolhe as coordenadas do lado de fora.
+  // Decorativa como as de dentro: o nome da casa já está no rótulo do botão.
+  _faixaCoordenadas(tipo) {
+    const faixa = document.createElement('div');
+    faixa.className = `tab-faixa tab-faixa-${tipo}`;
+    faixa.setAttribute('aria-hidden', 'true');
+    const valores = tipo === 'linhas'
+      ? ['8', '7', '6', '5', '4', '3', '2', '1']
+      : COLUNAS;
+    for (const valor of valores) {
+      const celula = document.createElement('span');
+      celula.textContent = valor;
+      faixa.appendChild(celula);
+    }
+    return faixa;
   }
 
   _aoTecla(e) {

@@ -4,4 +4,4 @@
 // carrega com importScripts.
 //
 // AO PUBLICAR UMA MUDANÇA: incremente aqui.
-self.VERSAO_APP = 12;
+self.VERSAO_APP = 13;

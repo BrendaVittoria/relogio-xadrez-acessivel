@@ -93,6 +93,18 @@ export function gravarTemaTabuleiro(id) {
   gravar('tema-tabuleiro', id);
 }
 
+// ---------------- Coordenadas do tabuleiro ----------------
+
+// Onde ficam as letras e os números: 'dentro' (nas casas da borda) ou 'fora'
+// (em faixas ao redor). Por aparelho, como o tema.
+export function lerCoordenadas() {
+  return ler('coordenadas') === 'fora' ? 'fora' : 'dentro';
+}
+
+export function gravarCoordenadas(id) {
+  gravar('coordenadas', id);
+}
+
 // ---------------- Formato da descrição de posição ----------------
 
 // Vale para o aparelho, como o tema: é uma escolha de como se prefere ouvir

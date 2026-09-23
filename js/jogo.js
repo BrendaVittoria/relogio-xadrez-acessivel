@@ -9,7 +9,7 @@ import { interpretarEntrada, resolverPromocao } from './parser.js';
 import { identificarComando, textoAjuda } from './comandos.js';
 import {
   anunciarLanceAplicado, descreverLance, descreverLanceFalado, descreverPecas, sufixoXeque,
-  nomeCasa, nomeCor, nomePeca, preencherListaLances,
+  lanceEscrito, nomeCasa, nomeCor, nomePeca, preencherListaLances,
   tempoFalado, tempoVisual, VALOR_PECAS,
 } from './fala.js';
 import { gravarPartidaAtual } from './armazenamento.js';
@@ -105,6 +105,7 @@ export class Partida {
       btnComecar: document.getElementById('btn-comecar'),
       btnVerHistorico: document.getElementById('btn-ver-historico'),
       indicadorVez: document.getElementById('indicador-vez'),
+      ultimoLance: document.getElementById('ultimo-lance'),
       areaHistorico: document.getElementById('area-historico'),
       btnModo: document.querySelector('#painel-acoes button[data-acao="modo"]'),
       btnSomPecas: document.getElementById('btn-som-pecas'),
@@ -1064,13 +1065,27 @@ export class Partida {
     preencherListaLances(this._el.historico, this.chess.history({ verbose: true }));
   }
 
-  // Os dois tabuleiros e a bolinha da vez seguem juntos a posição mostrada
-  // (a da revisão, quando o histórico está sendo navegado).
+  // Os dois tabuleiros, a bolinha da vez e o lance escrito seguem juntos a
+  // posição mostrada (a da revisão, quando o histórico está sendo navegado).
   _atualizarTabuleiros() {
     this.tabuleiro.atualizar();
     this.tabuleiroDigitacao.atualizar();
     const chess = this.chessRevisao || this.chess;
     this._el.indicadorVez.classList.toggle('pretas', chess.turn() === 'b');
+    this._atualizarLanceEscrito();
+  }
+
+  // Notação do lance que levou à posição mostrada: o último feito, ou o da
+  // revisão enquanto o histórico está sendo navegado.
+  _atualizarLanceEscrito() {
+    const verboso = this.chess.history({ verbose: true });
+    const indice = this.posicaoRevisao ?? verboso.length;
+    if (indice === 0) {
+      // sem lance nenhum ainda, ou voltou até a posição inicial
+      this._el.ultimoLance.textContent = verboso.length === 0 ? '' : 'início';
+      return;
+    }
+    this._el.ultimoLance.textContent = lanceEscrito(verboso[indice - 1], indice);
   }
 
   _atualizarTudo() {

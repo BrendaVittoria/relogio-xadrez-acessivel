@@ -72,12 +72,38 @@ export function aplicarTema(id) {
 }
 
 export function preencherSelectDeTemas(select, idAtual) {
+  preencherSelect(select, TEMAS_TABULEIRO, idAtual);
+}
+
+// ---------------- Coordenadas (letras e números) ----------------
+
+// Onde as coordenadas aparecem. Dentro das casas da borda o tabuleiro fica
+// maior; fora, em faixas ao redor, as casas ficam livres para as peças —
+// quem enxerga pouco costuma preferir assim.
+export const COORDENADAS = [
+  { id: 'dentro', nome: 'Dentro das casas da borda (padrão)' },
+  { id: 'fora', nome: 'Fora, ao redor do tabuleiro' },
+];
+
+export function aplicarCoordenadas(id) {
+  const escolha = COORDENADAS.find((c) => c.id === id) || COORDENADAS[0];
+  // um atributo na raiz basta: o CSS troca os dois tabuleiros de uma vez,
+  // sem remontar nada e sem perder o foco de quem está navegando pelas casas
+  document.documentElement.dataset.coordenadas = escolha.id;
+  return escolha;
+}
+
+export function preencherSelectDeCoordenadas(select, idAtual) {
+  preencherSelect(select, COORDENADAS, idAtual);
+}
+
+function preencherSelect(select, itens, idAtual) {
   select.textContent = '';
-  for (const tema of TEMAS_TABULEIRO) {
+  for (const item of itens) {
     const opcao = document.createElement('option');
-    opcao.value = tema.id;
-    opcao.textContent = tema.nome;
-    if (tema.id === idAtual) opcao.selected = true;
+    opcao.value = item.id;
+    opcao.textContent = item.nome;
+    if (item.id === idAtual) opcao.selected = true;
     select.appendChild(opcao);
   }
 }

@@ -98,15 +98,42 @@ export function descreverLanceFalado(lance) {
   return texto;
 }
 
+// Número do lance mais a notação, como numa planilha de partida: "12. Nf3"
+// para as brancas, "12... Nf3" para as pretas. `indice` é a posição do lance
+// na lista de meios-lances, começando em 1.
+//
+// A notação é a do SAN, com as iniciais de peça em inglês (N, B, R, Q, K) —
+// as MESMAS que a caixa de lances aceita e que saem no PGN. Iniciais em
+// português na tela (C, B, T, D) fariam quem lê "Cf3" digitar "Cf3" e tomar
+// um "lance ilegal" na cara.
+export function lanceEscrito(lance, indice) {
+  const numero = Math.ceil(indice / 2);
+  const separador = indice % 2 === 1 ? '.' : '...';
+  return `${numero}${separador} ${lance.san}`;
+}
+
 // Preenche um <ol> de histórico com um item por lance completo (par
-// brancas/pretas), na forma fonética: "eva 4, eva 5". O número do lance vem
-// da numeração do próprio <ol>; repeti-lo no texto faria o leitor falar "1. 1.".
+// brancas/pretas). Cada item traz as duas formas do mesmo lance: a notação
+// escrita, à vista de quem confere de olho ("e4 e5"), e a fonética, que só o
+// leitor de tela lê ("eva 4, eva 5") — as duas juntas sairiam repetidas na
+// fala. O número do lance vem da numeração do próprio <ol>; repeti-lo no
+// texto faria o leitor falar "1. 1.".
 export function preencherListaLances(lista, lances) {
   lista.textContent = '';
   for (let i = 0; i < lances.length; i += 2) {
     const par = [lances[i], lances[i + 1]].filter(Boolean);
     const item = document.createElement('li');
-    item.textContent = par.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san)).join(', ');
+
+    const notacao = document.createElement('span');
+    notacao.className = 'lance-notacao';
+    notacao.setAttribute('aria-hidden', 'true');
+    notacao.textContent = par.map((l) => l.san).join(' ');
+
+    const falado = document.createElement('span');
+    falado.className = 'sr-only';
+    falado.textContent = par.map((l) => descreverLanceFalado(l) + sufixoXeque(l.san)).join(', ');
+
+    item.append(notacao, falado);
     lista.appendChild(item);
   }
 }

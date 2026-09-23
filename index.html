@@ -87,6 +87,9 @@
           <select id="tema-tabuleiro"></select>
           <span class="amostra-tema" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
           <p class="ajuda">Opções de alto contraste para baixa visão. Vale para este aparelho e pode ser trocado também durante a partida, no painel de ações.</p>
+          <label for="coordenadas-tabuleiro">Letras e números do tabuleiro</label>
+          <select id="coordenadas-tabuleiro"></select>
+          <p class="ajuda">Dentro das casas o tabuleiro fica maior; fora, ao redor, as casas ficam livres para as peças.</p>
         </fieldset>
 
         <fieldset>
@@ -170,6 +173,8 @@
         <div id="area-tema">
           <label for="tema-tabuleiro-jogo">Cores das casas</label>
           <select id="tema-tabuleiro-jogo"></select>
+          <label for="coordenadas-tabuleiro-jogo">Letras e números do tabuleiro</label>
+          <select id="coordenadas-tabuleiro-jogo"></select>
         </div>
       </div>
 
@@ -214,6 +219,11 @@
         <span id="indicador-vez" aria-hidden="true"></span>
         <button type="button" id="btn-lance-anterior" aria-label="Voltar lance"><span class="simbolo-lance" aria-hidden="true">◀︎</span></button>
         <button type="button" id="btn-lance-proximo" aria-label="Avançar lance"><span class="simbolo-lance" aria-hidden="true">▶︎</span></button>
+        <!-- Lance mostrado no tabuleiro, escrito em notação ("12. Cf3"), para
+             conferir de olho o que acabou de entrar. Decorativo: o lance já é
+             falado quando é feito e ao navegar pelo histórico, e repetir aqui
+             faria o leitor de tela dizer tudo duas vezes. -->
+        <span id="ultimo-lance" aria-hidden="true"></span>
         <button type="button" id="btn-ver-historico" aria-expanded="false" hidden>Ver histórico</button>
       </div>
 

@@ -64,11 +64,14 @@ enxerga e pode apagar o cache do outro. Filtre sempre pelo prefixo
 | `js/anunciador.js` | Região `aria-live` única + sons de `sounds/` e bipes de reserva (Web Audio) |
 | `js/pgn.js` | Geração do PGN, download e Web Share |
 | `js/armazenamento.js` | localStorage: preferências, presets promovidos, tema, recuperação, backup |
-| `js/temas.js` | Temas de cores do tabuleiro (inclui alto contraste para baixa visão) |
+| `js/temas.js` | Aparência do tabuleiro: temas de cores (alto contraste para baixa visão) e posição das coordenadas |
 
 Extras além da espec: histórico local das últimas 50 partidas (sala de
-espera → "Histórico de partidas"), e Wake Lock para a tela não apagar
-durante a partida (silenciosamente ignorada onde não há suporte).
+espera → "Histórico de partidas"), Wake Lock para a tela não apagar
+durante a partida (silenciosamente ignorada onde não há suporte), escolha de
+onde ficam as letras e os números do tabuleiro (dentro das casas da borda ou
+em faixas ao redor) e o lance escrito em notação ao lado dos botões de
+navegação, para conferir de olho o que entrou.
 | `vendor/chess.js` | chess.js 1.4.0 vendorado (funciona offline) |
 | `icons/pecas/*.svg` | Peças SVG (conjunto Cburnett, de Colin M. L. Burnett, via Wikimedia Commons, licença CC BY-SA 3.0 / GFDL) |
 | `sw.js` | Service worker: cache do app shell para uso offline |

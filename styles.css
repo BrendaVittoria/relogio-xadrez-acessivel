@@ -202,14 +202,59 @@ button:hover { border-color: var(--foco); }
 .tab-quadro {
   width: min(100%, 88vmin, 30rem);
   margin-inline: auto; /* centralizado quando sobra largura na coluna */
+  --borda-tab: 3px;
+  --faixa-coord: 1.25rem;
 }
 
 .tab-grade {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
-  border: 3px solid var(--borda);
+  border: var(--borda-tab) solid var(--borda);
   box-sizing: border-box;
 }
+
+/* Coordenadas fora, ao redor do tabuleiro (escolha da pessoa, guardada no
+   aparelho). O quadro vira uma grade de duas colunas e duas linhas: faixa
+   dos números à esquerda, tabuleiro, faixa das letras embaixo.
+
+   A altura total continua igual à de largura — a faixa ocupa exatamente o
+   que o tabuleiro encolhe —, então o tabuleiro cabe na tela do celular do
+   mesmo jeito, só com as casas um pouco menores. */
+.tab-faixa { display: none; }
+
+:root[data-coordenadas="fora"] .tab-quadro {
+  display: grid;
+  grid-template-columns: var(--faixa-coord) 1fr;
+  grid-template-rows: 1fr var(--faixa-coord);
+}
+:root[data-coordenadas="fora"] .tab-grade { grid-area: 1 / 2; }
+:root[data-coordenadas="fora"] .tab-faixa {
+  display: flex;
+  color: var(--texto-suave);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+:root[data-coordenadas="fora"] .tab-faixa span {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* o padding compensa a borda do tabuleiro: sem ele, cada letra e cada
+   número ficam 3px fora do centro da sua fileira ou coluna */
+:root[data-coordenadas="fora"] .tab-faixa-linhas {
+  grid-area: 1 / 1;
+  flex-direction: column;
+  padding-block: var(--borda-tab);
+}
+:root[data-coordenadas="fora"] .tab-faixa-colunas {
+  grid-area: 2 / 2;
+  padding-inline: var(--borda-tab);
+}
+/* com as coordenadas fora, as de dentro sairiam repetidas */
+:root[data-coordenadas="fora"] .tab-coord { display: none; }
 
 /* Coordenadas decorativas dentro das casas da borda: número no canto de
    cima da coluna a, letra no canto de baixo da fileira 1. Cada uma usa a
@@ -335,6 +380,23 @@ select {
 /* o Ver histórico não disputa a linha com os dois de navegação */
 #tela-jogo #controles-lance #btn-ver-historico { flex-basis: 100%; }
 
+/* Lance mostrado no tabuleiro, escrito em notação, ao lado dos botões de
+   navegação. Largura mínima fixa e dígitos de mesma largura: o texto muda a
+   cada lance sem empurrar os botões de lugar. */
+#ultimo-lance {
+  flex: none;
+  min-width: 6rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--destaque);
+}
+
+/* Notação visível do histórico: a mesma linha traz a versão falada em
+   .sr-only, que não ocupa espaço na tela. */
+.lance-notacao { font-variant-numeric: tabular-nums; }
+
 .simbolo-lance { font-size: 1.8em; line-height: 1; }
 
 /* ---------------- Painel de ações ---------------- */
@@ -442,12 +504,15 @@ section { margin-top: 1rem; }
      sobra na tela: 100svh (altura com a barra de endereço visível — o pior
      caso) menos o espaço dos relógios, botões e caixa de lances (~18.5rem,
      já contando indicador de pausa, "na vez" e a linha fixa de Voltar e
-     Avançar lance logo abaixo do tabuleiro; as coordenadas ficam dentro
-     das casas e não gastam altura). O piso de 13rem garante casas tocáveis
+     Avançar lance logo abaixo do tabuleiro; as coordenadas não gastam
+     altura, nem dentro das casas nem na faixa de fora — ali a faixa ocupa
+     o que o tabuleiro encolhe). O piso de 13rem garante casas tocáveis
      mesmo em telas muito baixas — nesse caso extremo a página rola, mas o
      tabuleiro continua inteiro e estável. */
   .tab-quadro {
     width: max(min(100%, 30rem, calc(100svh - 18.5rem)), 13rem);
+    --faixa-coord: 1rem;
   }
   .tab-coord { font-size: 0.65rem; }
+  :root[data-coordenadas="fora"] .tab-faixa { font-size: 0.7rem; }
 }

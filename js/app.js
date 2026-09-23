@@ -16,12 +16,16 @@ import {
   PRESETS_FIXOS, presetsPromovidos, registrarUsoTempoPersonalizado,
   lerPreferencias, gravarPreferencias,
   lerTemaTabuleiro, gravarTemaTabuleiro,
+  lerCoordenadas, gravarCoordenadas,
   lerFormatoDescricao, gravarFormatoDescricao,
   lerPartidaAtual, limparPartidaAtual,
   lerHistorico, adicionarAoHistorico, removerDoHistorico, limparHistorico,
   exportarDados, importarDados,
 } from './armazenamento.js';
-import { aplicarTema, preencherSelectDeTemas } from './temas.js';
+import {
+  aplicarTema, preencherSelectDeTemas,
+  aplicarCoordenadas, preencherSelectDeCoordenadas,
+} from './temas.js';
 
 let jogoAtual = null;
 let fimAtual = null; // dados da partida encerrada mostrados na tela de resultado
@@ -225,7 +229,7 @@ function aoSubmeterSetup(evento) {
   iniciarPartida(config);
 }
 
-// ---------------- tema do tabuleiro ----------------
+// ---------------- aparência do tabuleiro ----------------
 
 function iniciarTemas() {
   const atual = lerTemaTabuleiro();
@@ -244,6 +248,31 @@ function trocarTema(id) {
   $('tema-tabuleiro').value = tema.id;
   $('tema-tabuleiro-jogo').value = tema.id;
   anunciar(`Cores do tabuleiro: ${tema.nome}.`);
+}
+
+// Onde ficam as letras e os números do tabuleiro. Mesmo desenho do tema:
+// dois seletores (sala de espera e painel de ações) para a mesma escolha,
+// que vale para o aparelho e pode mudar no meio da partida.
+function iniciarCoordenadas() {
+  const atual = lerCoordenadas();
+  aplicarCoordenadas(atual);
+  for (const id of ['coordenadas-tabuleiro', 'coordenadas-tabuleiro-jogo']) {
+    const select = $(id);
+    preencherSelectDeCoordenadas(select, atual);
+    select.addEventListener('change', () => trocarCoordenadas(select.value));
+  }
+}
+
+function trocarCoordenadas(id) {
+  const escolha = aplicarCoordenadas(id);
+  gravarCoordenadas(escolha.id);
+  $('coordenadas-tabuleiro').value = escolha.id;
+  $('coordenadas-tabuleiro-jogo').value = escolha.id;
+  anunciar(
+    escolha.id === 'fora'
+      ? 'Letras e números fora, ao redor do tabuleiro.'
+      : 'Letras e números dentro das casas da borda.',
+  );
 }
 
 // ---------------- descrição da posição (diálogo) ----------------
@@ -915,6 +944,7 @@ function iniciarApp() {
     iniciarAnunciador($('anunciador'));
     if (window.VERSAO_APP) $('versao-app').textContent = `Versão ${window.VERSAO_APP}`;
     iniciarTemas();
+    iniciarCoordenadas();
     formatoDescricao = lerFormatoDescricao();
     renderizarPresets();
     renderizarHistorico();
