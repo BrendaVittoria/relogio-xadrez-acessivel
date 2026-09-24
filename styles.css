@@ -314,6 +314,28 @@ button:hover { border-color: var(--foco); }
 .amostra-tema span:nth-child(2),
 .amostra-tema span:nth-child(3) { background: var(--casa-escura); }
 
+/* ---------------- Alto contraste do sistema ----------------
+
+   Com um tema de contraste do Windows ligado, o Chrome entra em
+   forced-colors e substitui todo background do autor por cor do sistema.
+   No tabuleiro isso é destrutivo: casa clara e casa escura viram a MESMA
+   cor, o xadrez desaparece e nenhum dos temas passa a ter efeito — a pessoa
+   troca a cor, o app confirma que trocou, e a tela não muda.
+
+   Quem liga o alto contraste do sistema é justamente quem escolheu essas
+   cores para conseguir enxergar. Aqui a cor É a informação, não decoração,
+   então o tabuleiro fica de fora da substituição. O resto da página continua
+   obedecendo ao sistema.
+
+   forced-color-adjust é herdado, então a declaração na casa cobre junto a
+   peça, a coordenada de dentro e o anel da casa selecionada — que é
+   box-shadow, descartado pelo modo forçado. Sem ele não dá para saber em que
+   casa se está, e o modo de entrada por tabuleiro fica inutilizável. */
+@media (forced-colors: active) {
+  .tab-casa,
+  .amostra-tema { forced-color-adjust: none; }
+}
+
 select {
   font-size: 1.05rem;
   padding: 0.45rem 0.6rem;

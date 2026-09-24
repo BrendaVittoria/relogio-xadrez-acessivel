@@ -156,16 +156,46 @@ function lerTempoDoFormulario() {
   return { ok: true, minutos, incrementoSegundos: incremento };
 }
 
+// Campos que a pessoa mexeu nesta sessão. Carregar as preferências do
+// árbitro é uma conveniência, e conveniência nenhuma pode desfazer escolha
+// feita à mão: sem esse registro, quem preenchesse o formulário na ordem em
+// que ele está na tela — tempo primeiro, nome do árbitro no bloco de baixo —
+// via o tempo recém-escolhido voltar ao das preferências ao sair do campo do
+// nome. E como o envio regrava as preferências com o que foi usado, o tempo
+// antigo se salvava de novo a cada partida, sem nunca soltar.
+//
+// Vale para a sessão inteira, inclusive na volta da partida para a sala de
+// espera: é a mesma ideia que faz renderizarPresets preservar a escolha ali.
+const camposTocados = new Set();
+
+// A que grupo de preferência pertence o controle mexido. Só os grupos que
+// aplicarPreferencias escreve; o resto do formulário não entra.
+function grupoDoCampo(alvo) {
+  if (alvo.name === 'modo-entrada') return 'modoEntrada';
+  if (alvo.name === 'preset-tempo'
+    || alvo.id === 'tempo-minutos' || alvo.id === 'tempo-incremento') return 'tempo';
+  if (alvo.id === 'alarmes') return 'alarmes';
+  if (alvo.id === 'som-avisos') return 'somAvisos';
+  if (alvo.id === 'som-pecas') return 'somPecas';
+  return null;
+}
+
 function aplicarPreferencias(nome) {
   const prefs = lerPreferencias(nome);
   if (!prefs) return;
-  const radioModo = document.querySelector(`input[name="modo-entrada"][value="${prefs.modoEntrada}"]`);
-  if (radioModo) radioModo.checked = true;
-  if (prefs.minutos) selecionarTempo(prefs.minutos, prefs.incrementoSegundos);
-  $('alarmes').value = prefs.alarmes ?? '30,15,5';
-  $('som-avisos').checked = prefs.somAtivado !== false;
-  $('som-pecas').checked = prefs.somPecas !== false;
-  anunciar(`Preferências de ${nome.trim()} carregadas.`);
+  // Preencher por .checked/.value não dispara evento, então nada do que for
+  // escrito aqui se marca como tocado — trocar o nome do árbitro continua
+  // trazendo as preferências do novo nome para os campos ainda intocados.
+  if (!camposTocados.has('modoEntrada')) {
+    const radioModo = document.querySelector(`input[name="modo-entrada"][value="${prefs.modoEntrada}"]`);
+    if (radioModo) radioModo.checked = true;
+  }
+  if (!camposTocados.has('tempo') && prefs.minutos) {
+    selecionarTempo(prefs.minutos, prefs.incrementoSegundos);
+  }
+  if (!camposTocados.has('alarmes')) $('alarmes').value = prefs.alarmes ?? '30,15,5';
+  if (!camposTocados.has('somAvisos')) $('som-avisos').checked = prefs.somAtivado !== false;
+  if (!camposTocados.has('somPecas')) $('som-pecas').checked = prefs.somPecas !== false;
 }
 
 // A partida seguinte é de outras pessoas e de outra rodada: esses campos
@@ -612,6 +642,17 @@ function ligarEventos() {
   $('form-setup').addEventListener('change', (e) => {
     if (e.target.name === 'preset-tempo') atualizarCamposPersonalizado();
   });
+  // Anotar o que a pessoa mexeu, para as preferências do árbitro não passarem
+  // por cima. Delegado no formulário porque os rádios de preset são recriados
+  // a cada renderizarPresets() — ouvinte preso a cada um se perderia no
+  // redesenho. 'input' ao lado de 'change' pega os campos de texto (alarmes,
+  // minutos, incremento) já na digitação, e não só quando o foco sai.
+  const marcarTocado = (e) => {
+    const grupo = grupoDoCampo(e.target);
+    if (grupo) camposTocados.add(grupo);
+  };
+  $('form-setup').addEventListener('change', marcarTocado);
+  $('form-setup').addEventListener('input', marcarTocado);
   $('nome-arbitro').addEventListener('change', (e) => aplicarPreferencias(e.target.value));
 
   // backup local
