@@ -42,6 +42,21 @@ export function artigoIndefinido(letraPeca) {
   return PECAS[letraPeca.toLowerCase()].artigo === 'a' ? 'uma' : 'um';
 }
 
+// Desambiguação do SAN: quando duas peças iguais podem ir à mesma casa, o
+// SAN diz de onde sai a que foi — "Rad1" (coluna), "R1d2" (fileira) ou
+// "Qh4e1" (casa inteira). Na fala isso vem logo depois da peça: "torre anna
+// david 1", "torre 1 david 2", "dama hector 4 eva 1". Sem ela, "torre david
+// 1" não diz qual das duas torres jogou.
+export function desambiguacaoFalada(lance) {
+  if (lance.piece === 'p') return '';
+  const m = /^[NBRQK]([a-h]?)([1-8]?)x?[a-h][1-8]/.exec(lance.san || '');
+  if (!m) return '';
+  const partes = [];
+  if (m[1]) partes.push(NOMES_COLUNAS[m[1]]);
+  if (m[2]) partes.push(m[2]);
+  return partes.length ? ` ${partes.join(' ')}` : '';
+}
+
 // Descreve um lance verboso do chess.js em português por extenso.
 // Com `comOrigem`, inclui de onde a peça vem — usado nas perguntas de
 // desambiguação (ex.: "peão de bella captura em cesar 3").
@@ -55,6 +70,8 @@ export function descreverLance(lance, comOrigem = false) {
     peca += lance.piece === 'p'
       ? ` de ${NOMES_COLUNAS[lance.from[0]]}`
       : ` de ${nomeCasa(lance.from)}`;
+  } else {
+    peca += desambiguacaoFalada(lance);
   }
   const destino = nomeCasa(lance.to);
   let texto;
@@ -84,13 +101,15 @@ export function descreverLanceFalado(lance) {
   let texto;
   if (lance.captured) {
     // "dama toma felix 7"; peão identifica-se pela coluna: "eva toma david 5"
-    const quem = lance.piece === 'p' ? NOMES_COLUNAS[lance.from[0]] : nomePeca(lance.piece);
+    const quem = lance.piece === 'p'
+      ? NOMES_COLUNAS[lance.from[0]]
+      : nomePeca(lance.piece) + desambiguacaoFalada(lance);
     texto = `${quem} toma ${destino}`;
     if (lance.flags.includes('e')) texto += ', en passant';
   } else if (lance.piece === 'p') {
     texto = destino;
   } else {
-    texto = `${nomePeca(lance.piece)} ${destino}`;
+    texto = `${nomePeca(lance.piece)}${desambiguacaoFalada(lance)} ${destino}`;
   }
   if (lance.promotion) {
     texto += `, promove a ${nomePeca(lance.promotion)}`;
